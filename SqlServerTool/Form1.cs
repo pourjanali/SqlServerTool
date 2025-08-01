@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,6 +17,9 @@ namespace SqlServerTool
         public Form1()
         {
             InitializeComponent();
+
+            // Set application version in the title
+            this.Text = $"SQL Server Utility v{Assembly.GetExecutingAssembly().GetName().Version}";
 
             _txtServer.Text = ".\\Sepidar";
             _txtUser.Text = "";
@@ -79,6 +83,7 @@ namespace SqlServerTool
             _txtMdfPath.Clear();
             _txtLdfPath.Clear();
             _lblVersion.Text = "Version: N/A";
+            _toolTip.SetToolTip(_lblVersion, "");
             _lblDbVersion.Text = "DataVersion: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
@@ -112,9 +117,9 @@ namespace SqlServerTool
             {
                 _sqlManager = new SqlManager(connectionString);
 
-                // Get the full version string including the edition
                 string version = await _sqlManager.GetSqlServerVersionAsync();
                 _lblVersion.Text = $"Version: {version}";
+                _toolTip.SetToolTip(_lblVersion, version);
                 Log("Connection successful.");
 
                 await RefreshDatabaseList();
@@ -471,6 +476,12 @@ namespace SqlServerTool
         private void _rbAuth_CheckedChanged(object sender, EventArgs e)
         {
             UpdateAuthControls();
+        }
+
+        private void _btnAbout_Click(object sender, EventArgs e)
+        {
+            AboutBox about = new AboutBox();
+            about.ShowDialog();
         }
     }
 }

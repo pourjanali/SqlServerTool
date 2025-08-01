@@ -60,6 +60,7 @@
             this._lblDbType = new System.Windows.Forms.Label();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._lblDatabases = new System.Windows.Forms.Label();
+            this._btnAbout = new System.Windows.Forms.Button();
             this._gbConnection.SuspendLayout();
             this._gbFilePaths.SuspendLayout();
             this._gbAttach.SuspendLayout();
@@ -256,10 +257,10 @@
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
-            this._rtbLog.Location = new System.Drawing.Point(12, 458);
+            this._rtbLog.Location = new System.Drawing.Point(12, 494);
             this._rtbLog.Name = "_rtbLog";
             this._rtbLog.ReadOnly = true;
-            this._rtbLog.Size = new System.Drawing.Size(960, 69);
+            this._rtbLog.Size = new System.Drawing.Size(960, 73);
             this._rtbLog.TabIndex = 7;
             this._rtbLog.Text = "";
             // 
@@ -488,11 +489,23 @@
             this._lblDatabases.TabIndex = 19;
             this._lblDatabases.Text = "Databases";
             // 
+            // _btnAbout
+            // 
+            this._btnAbout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnAbout.Location = new System.Drawing.Point(892, 458);
+            this._btnAbout.Name = "_btnAbout";
+            this._btnAbout.Size = new System.Drawing.Size(80, 30);
+            this._btnAbout.TabIndex = 20;
+            this._btnAbout.Text = "About";
+            this._btnAbout.UseVisualStyleBackColor = true;
+            this._btnAbout.Click += new System.EventHandler(this._btnAbout_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(984, 531);
+            this.ClientSize = new System.Drawing.Size(984, 571);
+            this.Controls.Add(this._btnAbout);
             this.Controls.Add(this._lblDatabases);
             this.Controls.Add(this._lblDbType);
             this.Controls.Add(this._lblFiscalYears);
@@ -512,7 +525,8 @@
             this.Controls.Add(this._lblVersion);
             this.Controls.Add(this._gbConnection);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MinimumSize = new System.Drawing.Size(1000, 570);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "SQL Server Utility";
             this._gbConnection.ResumeLayout(false);
@@ -571,5 +585,6 @@
         private System.Windows.Forms.Label _lblDbType;
         private System.Windows.Forms.ToolTip _toolTip;
         private System.Windows.Forms.Label _lblDatabases;
+        private System.Windows.Forms.Button _btnAbout;
     }
 }
