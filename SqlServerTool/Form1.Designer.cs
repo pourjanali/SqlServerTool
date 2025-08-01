@@ -16,6 +16,7 @@
         #region Windows Form Designer generated code
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this._gbConnection = new System.Windows.Forms.GroupBox();
             this._btnDisconnect = new System.Windows.Forms.Button();
             this._rbWindowsAuth = new System.Windows.Forms.RadioButton();
@@ -52,6 +53,13 @@
             this._txtAttachDbName = new System.Windows.Forms.TextBox();
             this._lblAttachDbName = new System.Windows.Forms.Label();
             this._btnRestore = new System.Windows.Forms.Button();
+            this._lblDbVersion = new System.Windows.Forms.Label();
+            this._lblCompanyName = new System.Windows.Forms.Label();
+            this._lbFiscalYears = new System.Windows.Forms.ListBox();
+            this._lblFiscalYears = new System.Windows.Forms.Label();
+            this._lblDbType = new System.Windows.Forms.Label();
+            this._toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._lblDatabases = new System.Windows.Forms.Label();
             this._gbConnection.SuspendLayout();
             this._gbFilePaths.SuspendLayout();
             this._gbAttach.SuspendLayout();
@@ -169,27 +177,29 @@
             // 
             // _lblVersion
             // 
-            this._lblVersion.AutoSize = true;
+            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this._lblVersion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblVersion.Location = new System.Drawing.Point(380, 22);
+            this._lblVersion.Location = new System.Drawing.Point(380, 15);
             this._lblVersion.Name = "_lblVersion";
-            this._lblVersion.Size = new System.Drawing.Size(76, 15);
+            this._lblVersion.Size = new System.Drawing.Size(592, 23);
             this._lblVersion.TabIndex = 1;
             this._lblVersion.Text = "Version: N/A";
+            this._lblVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _lbDatabases
             // 
             this._lbDatabases.FormattingEnabled = true;
             this._lbDatabases.ItemHeight = 15;
-            this._lbDatabases.Location = new System.Drawing.Point(380, 50);
+            this._lbDatabases.Location = new System.Drawing.Point(380, 130);
             this._lbDatabases.Name = "_lbDatabases";
-            this._lbDatabases.Size = new System.Drawing.Size(390, 139);
+            this._lbDatabases.Size = new System.Drawing.Size(280, 139);
             this._lbDatabases.TabIndex = 2;
             this._lbDatabases.SelectedIndexChanged += new System.EventHandler(this._lbDatabases_SelectedIndexChanged);
             // 
             // _btnBackup
             // 
-            this._btnBackup.Location = new System.Drawing.Point(12, 210);
+            this._btnBackup.Location = new System.Drawing.Point(12, 198);
             this._btnBackup.Name = "_btnBackup";
             this._btnBackup.Size = new System.Drawing.Size(110, 30);
             this._btnBackup.TabIndex = 3;
@@ -199,7 +209,7 @@
             // 
             // _btnBackupAndVerify
             // 
-            this._btnBackupAndVerify.Location = new System.Drawing.Point(128, 210);
+            this._btnBackupAndVerify.Location = new System.Drawing.Point(128, 198);
             this._btnBackupAndVerify.Name = "_btnBackupAndVerify";
             this._btnBackupAndVerify.Size = new System.Drawing.Size(110, 30);
             this._btnBackupAndVerify.TabIndex = 10;
@@ -210,9 +220,9 @@
             // _btnDelete
             // 
             this._btnDelete.BackColor = System.Drawing.Color.LightCoral;
-            this._btnDelete.Location = new System.Drawing.Point(520, 210);
+            this._btnDelete.Location = new System.Drawing.Point(244, 234);
             this._btnDelete.Name = "_btnDelete";
-            this._btnDelete.Size = new System.Drawing.Size(100, 30);
+            this._btnDelete.Size = new System.Drawing.Size(110, 30);
             this._btnDelete.TabIndex = 4;
             this._btnDelete.Text = "Delete DB";
             this._btnDelete.UseVisualStyleBackColor = false;
@@ -221,9 +231,9 @@
             // _btnCheckDb
             // 
             this._btnCheckDb.BackColor = System.Drawing.Color.LightSkyBlue;
-            this._btnCheckDb.Location = new System.Drawing.Point(244, 210);
+            this._btnCheckDb.Location = new System.Drawing.Point(12, 234);
             this._btnCheckDb.Name = "_btnCheckDb";
-            this._btnCheckDb.Size = new System.Drawing.Size(130, 30);
+            this._btnCheckDb.Size = new System.Drawing.Size(110, 30);
             this._btnCheckDb.TabIndex = 11;
             this._btnCheckDb.Text = "Check Health";
             this._btnCheckDb.UseVisualStyleBackColor = false;
@@ -232,9 +242,9 @@
             // _btnDetach
             // 
             this._btnDetach.BackColor = System.Drawing.Color.Khaki;
-            this._btnDetach.Location = new System.Drawing.Point(380, 210);
+            this._btnDetach.Location = new System.Drawing.Point(128, 234);
             this._btnDetach.Name = "_btnDetach";
-            this._btnDetach.Size = new System.Drawing.Size(134, 30);
+            this._btnDetach.Size = new System.Drawing.Size(110, 30);
             this._btnDetach.TabIndex = 12;
             this._btnDetach.Text = "Detach DB";
             this._btnDetach.UseVisualStyleBackColor = false;
@@ -242,14 +252,14 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
-            this._rtbLog.Location = new System.Drawing.Point(12, 480);
+            this._rtbLog.Location = new System.Drawing.Point(12, 458);
             this._rtbLog.Name = "_rtbLog";
             this._rtbLog.ReadOnly = true;
-            this._rtbLog.Size = new System.Drawing.Size(760, 69);
+            this._rtbLog.Size = new System.Drawing.Size(960, 69);
             this._rtbLog.TabIndex = 7;
             this._rtbLog.Text = "";
             // 
@@ -260,18 +270,18 @@
             this._gbFilePaths.Controls.Add(this._lblLdf);
             this._gbFilePaths.Controls.Add(this._txtMdfPath);
             this._gbFilePaths.Controls.Add(this._lblMdf);
-            this._gbFilePaths.Location = new System.Drawing.Point(12, 250);
+            this._gbFilePaths.Location = new System.Drawing.Point(12, 275);
             this._gbFilePaths.Name = "_gbFilePaths";
-            this._gbFilePaths.Size = new System.Drawing.Size(760, 90);
+            this._gbFilePaths.Size = new System.Drawing.Size(960, 90);
             this._gbFilePaths.TabIndex = 5;
             this._gbFilePaths.TabStop = false;
             this._gbFilePaths.Text = "Selected Database Files";
             // 
             // _btnOpenDir
             // 
-            this._btnOpenDir.Location = new System.Drawing.Point(640, 35);
+            this._btnOpenDir.Location = new System.Drawing.Point(840, 22);
             this._btnOpenDir.Name = "_btnOpenDir";
-            this._btnOpenDir.Size = new System.Drawing.Size(110, 30);
+            this._btnOpenDir.Size = new System.Drawing.Size(110, 50);
             this._btnOpenDir.TabIndex = 4;
             this._btnOpenDir.Text = "Open Location";
             this._btnOpenDir.UseVisualStyleBackColor = true;
@@ -282,7 +292,7 @@
             this._txtLdfPath.Location = new System.Drawing.Point(90, 52);
             this._txtLdfPath.Name = "_txtLdfPath";
             this._txtLdfPath.ReadOnly = true;
-            this._txtLdfPath.Size = new System.Drawing.Size(540, 23);
+            this._txtLdfPath.Size = new System.Drawing.Size(740, 23);
             this._txtLdfPath.TabIndex = 3;
             // 
             // _lblLdf
@@ -299,7 +309,7 @@
             this._txtMdfPath.Location = new System.Drawing.Point(90, 22);
             this._txtMdfPath.Name = "_txtMdfPath";
             this._txtMdfPath.ReadOnly = true;
-            this._txtMdfPath.Size = new System.Drawing.Size(540, 23);
+            this._txtMdfPath.Size = new System.Drawing.Size(740, 23);
             this._txtMdfPath.TabIndex = 1;
             // 
             // _lblMdf
@@ -322,9 +332,9 @@
             this._gbAttach.Controls.Add(this._lblAttachMdf);
             this._gbAttach.Controls.Add(this._txtAttachDbName);
             this._gbAttach.Controls.Add(this._lblAttachDbName);
-            this._gbAttach.Location = new System.Drawing.Point(12, 350);
+            this._gbAttach.Location = new System.Drawing.Point(12, 368);
             this._gbAttach.Name = "_gbAttach";
-            this._gbAttach.Size = new System.Drawing.Size(760, 120);
+            this._gbAttach.Size = new System.Drawing.Size(960, 84);
             this._gbAttach.TabIndex = 6;
             this._gbAttach.TabStop = false;
             this._gbAttach.Text = "Attach Database";
@@ -332,7 +342,7 @@
             // _btnAttach
             // 
             this._btnAttach.BackColor = System.Drawing.Color.LightGreen;
-            this._btnAttach.Location = new System.Drawing.Point(640, 50);
+            this._btnAttach.Location = new System.Drawing.Point(840, 17);
             this._btnAttach.Name = "_btnAttach";
             this._btnAttach.Size = new System.Drawing.Size(110, 55);
             this._btnAttach.TabIndex = 8;
@@ -342,7 +352,7 @@
             // 
             // _btnBrowseLdf
             // 
-            this._btnBrowseLdf.Location = new System.Drawing.Point(600, 80);
+            this._btnBrowseLdf.Location = new System.Drawing.Point(800, 48);
             this._btnBrowseLdf.Name = "_btnBrowseLdf";
             this._btnBrowseLdf.Size = new System.Drawing.Size(30, 25);
             this._btnBrowseLdf.TabIndex = 7;
@@ -352,15 +362,15 @@
             // 
             // _txtAttachLdf
             // 
-            this._txtAttachLdf.Location = new System.Drawing.Point(120, 82);
+            this._txtAttachLdf.Location = new System.Drawing.Point(120, 50);
             this._txtAttachLdf.Name = "_txtAttachLdf";
-            this._txtAttachLdf.Size = new System.Drawing.Size(470, 23);
+            this._txtAttachLdf.Size = new System.Drawing.Size(670, 23);
             this._txtAttachLdf.TabIndex = 6;
             // 
             // _lblAttachLdf
             // 
             this._lblAttachLdf.AutoSize = true;
-            this._lblAttachLdf.Location = new System.Drawing.Point(15, 85);
+            this._lblAttachLdf.Location = new System.Drawing.Point(15, 53);
             this._lblAttachLdf.Name = "_lblAttachLdf";
             this._lblAttachLdf.Size = new System.Drawing.Size(51, 15);
             this._lblAttachLdf.TabIndex = 5;
@@ -368,7 +378,7 @@
             // 
             // _btnBrowseMdf
             // 
-            this._btnBrowseMdf.Location = new System.Drawing.Point(600, 50);
+            this._btnBrowseMdf.Location = new System.Drawing.Point(800, 17);
             this._btnBrowseMdf.Name = "_btnBrowseMdf";
             this._btnBrowseMdf.Size = new System.Drawing.Size(30, 25);
             this._btnBrowseMdf.TabIndex = 4;
@@ -378,15 +388,15 @@
             // 
             // _txtAttachMdf
             // 
-            this._txtAttachMdf.Location = new System.Drawing.Point(120, 52);
+            this._txtAttachMdf.Location = new System.Drawing.Point(120, 19);
             this._txtAttachMdf.Name = "_txtAttachMdf";
-            this._txtAttachMdf.Size = new System.Drawing.Size(470, 23);
+            this._txtAttachMdf.Size = new System.Drawing.Size(670, 23);
             this._txtAttachMdf.TabIndex = 3;
             // 
             // _lblAttachMdf
             // 
             this._lblAttachMdf.AutoSize = true;
-            this._lblAttachMdf.Location = new System.Drawing.Point(15, 55);
+            this._lblAttachMdf.Location = new System.Drawing.Point(15, 22);
             this._lblAttachMdf.Name = "_lblAttachMdf";
             this._lblAttachMdf.Size = new System.Drawing.Size(56, 15);
             this._lblAttachMdf.TabIndex = 2;
@@ -394,36 +404,101 @@
             // 
             // _txtAttachDbName
             // 
-            this._txtAttachDbName.Location = new System.Drawing.Point(120, 22);
+            this._txtAttachDbName.Location = new System.Drawing.Point(120, -4);
             this._txtAttachDbName.Name = "_txtAttachDbName";
             this._txtAttachDbName.Size = new System.Drawing.Size(250, 23);
             this._txtAttachDbName.TabIndex = 1;
+            this._txtAttachDbName.Visible = false;
             // 
             // _lblAttachDbName
             // 
             this._lblAttachDbName.AutoSize = true;
-            this._lblAttachDbName.Location = new System.Drawing.Point(15, 25);
+            this._lblAttachDbName.Location = new System.Drawing.Point(15, -1);
             this._lblAttachDbName.Name = "_lblAttachDbName";
             this._lblAttachDbName.Size = new System.Drawing.Size(87, 15);
             this._lblAttachDbName.TabIndex = 0;
             this._lblAttachDbName.Text = "New DB Name:";
+            this._lblAttachDbName.Visible = false;
             // 
             // _btnRestore
             // 
             this._btnRestore.BackColor = System.Drawing.Color.MediumAquamarine;
-            this._btnRestore.Location = new System.Drawing.Point(626, 210);
+            this._btnRestore.Location = new System.Drawing.Point(244, 198);
             this._btnRestore.Name = "_btnRestore";
-            this._btnRestore.Size = new System.Drawing.Size(144, 30);
+            this._btnRestore.Size = new System.Drawing.Size(110, 30);
             this._btnRestore.TabIndex = 13;
             this._btnRestore.Text = "Restore DB";
             this._btnRestore.UseVisualStyleBackColor = false;
             this._btnRestore.Click += new System.EventHandler(this._btnRestore_Click);
             // 
+            // _lblDbVersion
+            // 
+            this._lblDbVersion.AutoSize = true;
+            this._lblDbVersion.Location = new System.Drawing.Point(380, 45);
+            this._lblDbVersion.Name = "_lblDbVersion";
+            this._lblDbVersion.Size = new System.Drawing.Size(95, 15);
+            this._lblDbVersion.TabIndex = 14;
+            this._lblDbVersion.Text = "DataVersion: N/A";
+            // 
+            // _lblCompanyName
+            // 
+            this._lblCompanyName.AutoSize = true;
+            this._lblCompanyName.Location = new System.Drawing.Point(380, 65);
+            this._lblCompanyName.Name = "_lblCompanyName";
+            this._lblCompanyName.Size = new System.Drawing.Size(88, 15);
+            this._lblCompanyName.TabIndex = 15;
+            this._lblCompanyName.Text = "Company: N/A";
+            // 
+            // _lbFiscalYears
+            // 
+            this._lbFiscalYears.FormattingEnabled = true;
+            this._lbFiscalYears.ItemHeight = 15;
+            this._lbFiscalYears.Location = new System.Drawing.Point(670, 130);
+            this._lbFiscalYears.Name = "_lbFiscalYears";
+            this._lbFiscalYears.Size = new System.Drawing.Size(302, 139);
+            this._lbFiscalYears.TabIndex = 16;
+            // 
+            // _lblFiscalYears
+            // 
+            this._lblFiscalYears.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this._lblFiscalYears.Location = new System.Drawing.Point(670, 110);
+            this._lblFiscalYears.Name = "_lblFiscalYears";
+            this._lblFiscalYears.Size = new System.Drawing.Size(302, 15);
+            this._lblFiscalYears.TabIndex = 17;
+            this._lblFiscalYears.Text = "Fiscal Years";
+            this._lblFiscalYears.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // _lblDbType
+            // 
+            this._lblDbType.AutoSize = true;
+            this._lblDbType.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._lblDbType.Location = new System.Drawing.Point(380, 85);
+            this._lblDbType.Name = "_lblDbType";
+            this._lblDbType.Size = new System.Drawing.Size(61, 15);
+            this._lblDbType.TabIndex = 18;
+            this._lblDbType.Text = "Type: N/A";
+            // 
+            // _lblDatabases
+            // 
+            this._lblDatabases.AutoSize = true;
+            this._lblDatabases.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this._lblDatabases.Location = new System.Drawing.Point(380, 110);
+            this._lblDatabases.Name = "_lblDatabases";
+            this._lblDatabases.Size = new System.Drawing.Size(64, 15);
+            this._lblDatabases.TabIndex = 19;
+            this._lblDatabases.Text = "Databases";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(984, 531);
+            this.Controls.Add(this._lblDatabases);
+            this.Controls.Add(this._lblDbType);
+            this.Controls.Add(this._lblFiscalYears);
+            this.Controls.Add(this._lbFiscalYears);
+            this.Controls.Add(this._lblCompanyName);
+            this.Controls.Add(this._lblDbVersion);
             this.Controls.Add(this._btnRestore);
             this.Controls.Add(this._gbAttach);
             this.Controls.Add(this._gbFilePaths);
@@ -437,7 +512,7 @@
             this.Controls.Add(this._lblVersion);
             this.Controls.Add(this._gbConnection);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MinimumSize = new System.Drawing.Size(800, 600);
+            this.MinimumSize = new System.Drawing.Size(1000, 570);
             this.Name = "Form1";
             this.Text = "SQL Server Utility";
             this._gbConnection.ResumeLayout(false);
@@ -489,5 +564,12 @@
         private System.Windows.Forms.Button _btnBrowseLdf;
         private System.Windows.Forms.Button _btnAttach;
         private System.Windows.Forms.Button _btnRestore;
+        private System.Windows.Forms.Label _lblDbVersion;
+        private System.Windows.Forms.Label _lblCompanyName;
+        private System.Windows.Forms.ListBox _lbFiscalYears;
+        private System.Windows.Forms.Label _lblFiscalYears;
+        private System.Windows.Forms.Label _lblDbType;
+        private System.Windows.Forms.ToolTip _toolTip;
+        private System.Windows.Forms.Label _lblDatabases;
     }
 }

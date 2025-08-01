@@ -17,7 +17,6 @@ namespace SqlServerTool
         {
             InitializeComponent();
 
-            // Set new defaults as requested
             _txtServer.Text = ".\\Sepidar";
             _txtUser.Text = "";
             _txtPassword.Text = "";
@@ -59,7 +58,6 @@ namespace SqlServerTool
             _btnConnect.Enabled = false;
             _btnDisconnect.Enabled = true;
 
-            // Enable operations
             _btnBackup.Enabled = true;
             _btnBackupAndVerify.Enabled = true;
             _btnDelete.Enabled = true;
@@ -77,11 +75,15 @@ namespace SqlServerTool
             _btnDisconnect.Enabled = false;
 
             _lbDatabases.DataSource = null;
+            _lbFiscalYears.DataSource = null;
             _txtMdfPath.Clear();
             _txtLdfPath.Clear();
             _lblVersion.Text = "Version: N/A";
+            _lblDbVersion.Text = "DataVersion: N/A";
+            _lblCompanyName.Text = "Company: N/A";
+            _lblDbType.Text = "Type: N/A";
 
-            // Disable operations
+
             _btnBackup.Enabled = false;
             _btnBackupAndVerify.Enabled = false;
             _btnDelete.Enabled = false;
@@ -110,8 +112,9 @@ namespace SqlServerTool
             {
                 _sqlManager = new SqlManager(connectionString);
 
+                // Get the full version string including the edition
                 string version = await _sqlManager.GetSqlServerVersionAsync();
-                _lblVersion.Text = $"Version: {version.Split('\n')[0]}";
+                _lblVersion.Text = $"Version: {version}";
                 Log("Connection successful.");
 
                 await RefreshDatabaseList();
@@ -135,8 +138,12 @@ namespace SqlServerTool
             if (_sqlManager == null) return;
             Log("Refreshing database list...");
             _lbDatabases.DataSource = null;
+            _lbFiscalYears.DataSource = null;
             _txtMdfPath.Clear();
             _txtLdfPath.Clear();
+            _lblDbVersion.Text = "DataVersion: N/A";
+            _lblCompanyName.Text = "Company: N/A";
+            _lblDbType.Text = "Type: N/A";
             _databases = await _sqlManager.GetDatabasesAndFilesAsync();
             _lbDatabases.DataSource = _databases;
             _lbDatabases.DisplayMember = "Name";
@@ -283,7 +290,6 @@ namespace SqlServerTool
 
         private async void _btnRestore_Click(object sender, EventArgs e)
         {
-            // 1. Select the backup file
             using (var ofd = new OpenFileDialog())
             {
                 ofd.Filter = "Backup File (*.bak)|*.bak";
@@ -293,7 +299,6 @@ namespace SqlServerTool
                 this.Cursor = Cursors.WaitCursor;
                 try
                 {
-                    // 2. Get original name and ask for a new name
                     Log($"Analyzing backup file: {ofd.FileName}");
                     string originalDbName = await _sqlManager.GetOriginalDatabaseNameAsync(ofd.FileName);
                     if (string.IsNullOrEmpty(originalDbName))
@@ -309,7 +314,6 @@ namespace SqlServerTool
                         return;
                     }
 
-                    // 3. Ask for the destination folder for MDF/LDF files
                     string destinationFolder;
                     using (var fbd = new FolderBrowserDialog())
                     {
@@ -329,7 +333,6 @@ namespace SqlServerTool
                     Log($"New MDF Path: {newMdfPath}");
                     Log($"New LDF Path: {newLdfPath}");
 
-                    // 4. Perform the restore
                     await _sqlManager.RestoreDatabaseAsync(newDbName, ofd.FileName, newMdfPath, newLdfPath);
 
                     Log("Database restored successfully.");
@@ -348,12 +351,42 @@ namespace SqlServerTool
             }
         }
 
-        private void _lbDatabases_SelectedIndexChanged(object sender, EventArgs e)
+        private async void _lbDatabases_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_lbDatabases.SelectedItem is DatabaseInfo dbInfo)
             {
                 _txtMdfPath.Text = dbInfo.MdfPath;
                 _txtLdfPath.Text = dbInfo.LdfPath;
+
+                _lblDbVersion.Text = "DataVersion: Loading...";
+                _lblCompanyName.Text = "Company: Loading...";
+                _lblDbType.Text = "Type: Loading...";
+                _lbFiscalYears.DataSource = null;
+
+                try
+                {
+                    var details = await _sqlManager.GetDatabaseDetailsAsync(dbInfo.Name);
+                    _lblDbVersion.Text = $"DataVersion: {details.DataVersion}";
+                    _lblCompanyName.Text = $"Company: {details.CompanyName}";
+                    _lblDbType.Text = $"Type: {details.DbType}";
+                    _lbFiscalYears.DataSource = details.FiscalYears;
+                }
+                catch (Exception ex)
+                {
+                    Log($"ERROR: Could not get database details for {dbInfo.Name}. {ex.Message}");
+                    _lblDbVersion.Text = "DataVersion: Error";
+                    _lblCompanyName.Text = "Company: Error";
+                    _lblDbType.Text = "Type: Error";
+                }
+            }
+            else
+            {
+                _txtMdfPath.Clear();
+                _txtLdfPath.Clear();
+                _lblDbVersion.Text = "DataVersion: N/A";
+                _lblCompanyName.Text = "Company: N/A";
+                _lblDbType.Text = "Type: N/A";
+                _lbFiscalYears.DataSource = null;
             }
         }
 

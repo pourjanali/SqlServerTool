@@ -4,11 +4,24 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SqlServerTool
 {
+    public enum DatabaseType { Unknown, Sepidar, Dasht }
+
+    /// <summary>
+    /// A container for all retrieved details about a specific database.
+    /// </summary>
+    public class DbDetails
+    {
+        public string DataVersion { get; set; } = "N/A";
+        public string CompanyName { get; set; } = "N/A";
+        public DatabaseType DbType { get; set; } = DatabaseType.Unknown;
+        public List<string> FiscalYears { get; set; } = new List<string>();
+    }
+
+
     /// <summary>
     /// Core class for interacting with a SQL Server instance.
     /// Handles all database operations.
@@ -68,14 +81,32 @@ namespace SqlServerTool
             }
         }
 
+        /// <summary>
+        /// Gets the full SQL Server version string, including the Edition.
+        /// </summary>
+        /// <returns>A formatted string with the server edition and version number.</returns>
         public async Task<string> GetSqlServerVersionAsync()
         {
+            string edition = "N/A";
+            string version = "N/A";
+
+            // This query gets both the edition (e.g., "Express Edition") and the full version info.
+            const string query = "SELECT SERVERPROPERTY('Edition'), @@VERSION";
+
             using (var connection = await GetOpenConnectionAsync())
-            using (var command = new SqlCommand("SELECT @@VERSION", connection))
+            using (var command = new SqlCommand(query, connection))
+            using (var reader = await command.ExecuteReaderAsync())
             {
-                return (await command.ExecuteScalarAsync() as string) ?? "Version not found.";
+                if (await reader.ReadAsync())
+                {
+                    edition = reader.GetString(0);
+                    // The @@VERSION string can have multiple lines, we only want the first one.
+                    version = reader.GetString(1).Split('\n')[0].Trim();
+                }
             }
+            return $"{edition} - {version}";
         }
+
 
         public async Task<List<DatabaseInfo>> GetDatabasesAndFilesAsync()
         {
@@ -129,15 +160,10 @@ namespace SqlServerTool
             return true;
         }
 
-        /// <summary>
-        /// Runs DBCC CHECKDB and intelligently parses the output to determine if there are errors.
-        /// </summary>
-        /// <param name="databaseName">The name of the database to check.</param>
-        /// <returns>A tuple containing the full string output and a boolean indicating if errors were found.</returns>
         public async Task<(string Output, bool HasErrors)> CheckDatabaseAsync(string databaseName)
         {
             var output = new StringBuilder();
-            bool hasErrors = false; // Assume innocence
+            bool hasErrors = false;
 
             using (var connection = await GetOpenConnectionAsync())
             {
@@ -145,17 +171,14 @@ namespace SqlServerTool
                     output.AppendLine(e.Message);
                 };
 
-                // Use WITH ALL_ERRORMSGS and NO_INFOMSGS to get a cleaner, more direct result.
                 using (var command = new SqlCommand($"DBCC CHECKDB ('{databaseName}') WITH ALL_ERRORMSGS, NO_INFOMSGS", connection))
                 {
-                    command.CommandTimeout = 1800; // 30 minutes for very large databases
+                    command.CommandTimeout = 1800;
                     await command.ExecuteNonQueryAsync();
                 }
             }
 
             string resultText = output.ToString();
-
-            // An empty or whitespace result after using NO_INFOMSGS is a very good sign it's clean.
             if (string.IsNullOrWhiteSpace(resultText))
             {
                 resultText = "DBCC CHECKDB reported no errors.";
@@ -163,7 +186,6 @@ namespace SqlServerTool
             }
             else
             {
-                // If there's any output at all with ALL_ERRORMSGS, it signifies a problem.
                 hasErrors = true;
             }
 
@@ -177,8 +199,6 @@ namespace SqlServerTool
             return true;
         }
 
-        // --- RESTORE METHODS ---
-
         public async Task<bool> RestoreDatabaseAsync(string databaseName, string backupFilePath, string newMdfPath, string newLdfPath)
         {
             var fileList = await GetBackupFileListAsync(backupFilePath);
@@ -187,8 +207,8 @@ namespace SqlServerTool
                 throw new InvalidOperationException("Could not read the logical file names from the backup set.");
             }
 
-            var mdfLogicalName = fileList.First(f => f.Type == "D").LogicalName; // 'D' for Data
-            var ldfLogicalName = fileList.First(f => f.Type == "L").LogicalName; // 'L' for Log
+            var mdfLogicalName = fileList.First(f => f.Type == "D").LogicalName;
+            var ldfLogicalName = fileList.First(f => f.Type == "L").LogicalName;
 
             string commandText = $@"
                 RESTORE DATABASE [{databaseName}]
@@ -218,7 +238,7 @@ namespace SqlServerTool
                     }
                 }
             }
-            return null; // Not found
+            return null;
         }
 
         public async Task<List<(string LogicalName, string Type)>> GetBackupFileListAsync(string backupFilePath)
@@ -236,6 +256,83 @@ namespace SqlServerTool
                 }
             }
             return fileList;
+        }
+
+        public async Task<DbDetails> GetDatabaseDetailsAsync(string databaseName)
+        {
+            var details = new DbDetails();
+            var builder = new SqlConnectionStringBuilder(_connectionString)
+            {
+                InitialCatalog = databaseName
+            };
+
+            using (var connection = new SqlConnection(builder.ConnectionString))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+
+                    string versionQuery = "SELECT TOP 1 CAST(Major AS VARCHAR) + '.' + CAST(Minor AS VARCHAR) + '.' + CAST(Build AS VARCHAR) AS Result FROM fmk.Version ORDER BY VersionID DESC;";
+                    using (var versionCmd = new SqlCommand(versionQuery, connection))
+                    {
+                        var result = await versionCmd.ExecuteScalarAsync();
+                        if (result != null && result != DBNull.Value)
+                        {
+                            details.DataVersion = result.ToString();
+                        }
+                    }
+
+                    string companyQuery = "SELECT Value FROM fmk.Configuration WHERE [Key] = N'CompanyName'";
+                    using (var companyCmd = new SqlCommand(companyQuery, connection))
+                    {
+                        var result = await companyCmd.ExecuteScalarAsync();
+                        if (result != null && result != DBNull.Value)
+                        {
+                            details.CompanyName = result.ToString();
+                        }
+                    }
+
+                    try
+                    {
+                        string sepidarQuery = "SELECT Title FROM fmk.fiscalyear";
+                        using (var fiscalCmd = new SqlCommand(sepidarQuery, connection))
+                        using (var reader = await fiscalCmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                details.FiscalYears.Add(reader.GetString(0));
+                            }
+                            details.DbType = DatabaseType.Sepidar;
+                        }
+                    }
+                    catch (SqlException)
+                    {
+                        try
+                        {
+                            string dashtQuery = "SELECT Title FROM fmk.fiscalperiod";
+                            using (var fiscalCmd = new SqlCommand(dashtQuery, connection))
+                            using (var reader = await fiscalCmd.ExecuteReaderAsync())
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    details.FiscalYears.Add(reader.GetString(0));
+                                }
+                                details.DbType = DatabaseType.Dasht;
+                            }
+                        }
+                        catch (SqlException)
+                        {
+                            details.DbType = DatabaseType.Unknown;
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    Console.WriteLine($"INFO: Could not retrieve details for {databaseName}. Error: {ex.Message}");
+                }
+            }
+
+            return details;
         }
     }
 }
