@@ -31,7 +31,6 @@
             this._lblVersion = new System.Windows.Forms.Label();
             this._lbDatabases = new System.Windows.Forms.ListBox();
             this._btnBackup = new System.Windows.Forms.Button();
-            this._btnBackupAndVerify = new System.Windows.Forms.Button();
             this._btnDelete = new System.Windows.Forms.Button();
             this._btnCheckDb = new System.Windows.Forms.Button();
             this._btnDetach = new System.Windows.Forms.Button();
@@ -61,6 +60,9 @@
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._lblDatabases = new System.Windows.Forms.Label();
             this._btnAbout = new System.Windows.Forms.Button();
+            this._lblActivationCode = new System.Windows.Forms.Label();
+            this._btnBackupVerifyChecksum = new System.Windows.Forms.Button();
+            this._progressBar = new System.Windows.Forms.ProgressBar();
             this._gbConnection.SuspendLayout();
             this._gbFilePaths.SuspendLayout();
             this._gbAttach.SuspendLayout();
@@ -192,7 +194,7 @@
             // 
             this._lbDatabases.FormattingEnabled = true;
             this._lbDatabases.ItemHeight = 15;
-            this._lbDatabases.Location = new System.Drawing.Point(380, 130);
+            this._lbDatabases.Location = new System.Drawing.Point(380, 153);
             this._lbDatabases.Name = "_lbDatabases";
             this._lbDatabases.Size = new System.Drawing.Size(280, 139);
             this._lbDatabases.TabIndex = 2;
@@ -208,22 +210,12 @@
             this._btnBackup.UseVisualStyleBackColor = true;
             this._btnBackup.Click += new System.EventHandler(this._btnBackup_Click);
             // 
-            // _btnBackupAndVerify
-            // 
-            this._btnBackupAndVerify.Location = new System.Drawing.Point(128, 198);
-            this._btnBackupAndVerify.Name = "_btnBackupAndVerify";
-            this._btnBackupAndVerify.Size = new System.Drawing.Size(110, 30);
-            this._btnBackupAndVerify.TabIndex = 10;
-            this._btnBackupAndVerify.Text = "Backup && Verify";
-            this._btnBackupAndVerify.UseVisualStyleBackColor = true;
-            this._btnBackupAndVerify.Click += new System.EventHandler(this._btnBackupAndVerify_Click);
-            // 
             // _btnDelete
             // 
             this._btnDelete.BackColor = System.Drawing.Color.LightCoral;
-            this._btnDelete.Location = new System.Drawing.Point(244, 234);
+            this._btnDelete.Location = new System.Drawing.Point(12, 270);
             this._btnDelete.Name = "_btnDelete";
-            this._btnDelete.Size = new System.Drawing.Size(110, 30);
+            this._btnDelete.Size = new System.Drawing.Size(342, 30);
             this._btnDelete.TabIndex = 4;
             this._btnDelete.Text = "Delete DB";
             this._btnDelete.UseVisualStyleBackColor = false;
@@ -232,7 +224,7 @@
             // _btnCheckDb
             // 
             this._btnCheckDb.BackColor = System.Drawing.Color.LightSkyBlue;
-            this._btnCheckDb.Location = new System.Drawing.Point(12, 234);
+            this._btnCheckDb.Location = new System.Drawing.Point(128, 234);
             this._btnCheckDb.Name = "_btnCheckDb";
             this._btnCheckDb.Size = new System.Drawing.Size(110, 30);
             this._btnCheckDb.TabIndex = 11;
@@ -243,7 +235,7 @@
             // _btnDetach
             // 
             this._btnDetach.BackColor = System.Drawing.Color.Khaki;
-            this._btnDetach.Location = new System.Drawing.Point(128, 234);
+            this._btnDetach.Location = new System.Drawing.Point(244, 234);
             this._btnDetach.Name = "_btnDetach";
             this._btnDetach.Size = new System.Drawing.Size(110, 30);
             this._btnDetach.TabIndex = 12;
@@ -257,7 +249,7 @@
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
-            this._rtbLog.Location = new System.Drawing.Point(12, 494);
+            this._rtbLog.Location = new System.Drawing.Point(12, 495);
             this._rtbLog.Name = "_rtbLog";
             this._rtbLog.ReadOnly = true;
             this._rtbLog.Size = new System.Drawing.Size(960, 73);
@@ -271,7 +263,7 @@
             this._gbFilePaths.Controls.Add(this._lblLdf);
             this._gbFilePaths.Controls.Add(this._txtMdfPath);
             this._gbFilePaths.Controls.Add(this._lblMdf);
-            this._gbFilePaths.Location = new System.Drawing.Point(12, 275);
+            this._gbFilePaths.Location = new System.Drawing.Point(12, 306);
             this._gbFilePaths.Name = "_gbFilePaths";
             this._gbFilePaths.Size = new System.Drawing.Size(960, 90);
             this._gbFilePaths.TabIndex = 5;
@@ -333,9 +325,9 @@
             this._gbAttach.Controls.Add(this._lblAttachMdf);
             this._gbAttach.Controls.Add(this._txtAttachDbName);
             this._gbAttach.Controls.Add(this._lblAttachDbName);
-            this._gbAttach.Location = new System.Drawing.Point(12, 368);
+            this._gbAttach.Location = new System.Drawing.Point(12, 399);
             this._gbAttach.Name = "_gbAttach";
-            this._gbAttach.Size = new System.Drawing.Size(960, 84);
+            this._gbAttach.Size = new System.Drawing.Size(960, 59);
             this._gbAttach.TabIndex = 6;
             this._gbAttach.TabStop = false;
             this._gbAttach.Text = "Attach Database";
@@ -345,7 +337,7 @@
             this._btnAttach.BackColor = System.Drawing.Color.LightGreen;
             this._btnAttach.Location = new System.Drawing.Point(840, 17);
             this._btnAttach.Name = "_btnAttach";
-            this._btnAttach.Size = new System.Drawing.Size(110, 55);
+            this._btnAttach.Size = new System.Drawing.Size(110, 30);
             this._btnAttach.TabIndex = 8;
             this._btnAttach.Text = "Attach Database";
             this._btnAttach.UseVisualStyleBackColor = false;
@@ -359,19 +351,20 @@
             this._btnBrowseLdf.TabIndex = 7;
             this._btnBrowseLdf.Text = "...";
             this._btnBrowseLdf.UseVisualStyleBackColor = true;
+            this._btnBrowseLdf.Visible = false;
             this._btnBrowseLdf.Click += new System.EventHandler(this._btnBrowseLdf_Click);
             // 
             // _txtAttachLdf
             // 
-            this._txtAttachLdf.Location = new System.Drawing.Point(120, 50);
+            this._txtAttachLdf.Location = new System.Drawing.Point(461, 22);
             this._txtAttachLdf.Name = "_txtAttachLdf";
-            this._txtAttachLdf.Size = new System.Drawing.Size(670, 23);
+            this._txtAttachLdf.Size = new System.Drawing.Size(329, 23);
             this._txtAttachLdf.TabIndex = 6;
             // 
             // _lblAttachLdf
             // 
             this._lblAttachLdf.AutoSize = true;
-            this._lblAttachLdf.Location = new System.Drawing.Point(15, 53);
+            this._lblAttachLdf.Location = new System.Drawing.Point(404, 25);
             this._lblAttachLdf.Name = "_lblAttachLdf";
             this._lblAttachLdf.Size = new System.Drawing.Size(51, 15);
             this._lblAttachLdf.TabIndex = 5;
@@ -389,15 +382,15 @@
             // 
             // _txtAttachMdf
             // 
-            this._txtAttachMdf.Location = new System.Drawing.Point(120, 19);
+            this._txtAttachMdf.Location = new System.Drawing.Point(82, 22);
             this._txtAttachMdf.Name = "_txtAttachMdf";
-            this._txtAttachMdf.Size = new System.Drawing.Size(670, 23);
+            this._txtAttachMdf.Size = new System.Drawing.Size(316, 23);
             this._txtAttachMdf.TabIndex = 3;
             // 
             // _lblAttachMdf
             // 
             this._lblAttachMdf.AutoSize = true;
-            this._lblAttachMdf.Location = new System.Drawing.Point(15, 22);
+            this._lblAttachMdf.Location = new System.Drawing.Point(15, 25);
             this._lblAttachMdf.Name = "_lblAttachMdf";
             this._lblAttachMdf.Size = new System.Drawing.Size(56, 15);
             this._lblAttachMdf.TabIndex = 2;
@@ -424,7 +417,7 @@
             // _btnRestore
             // 
             this._btnRestore.BackColor = System.Drawing.Color.MediumAquamarine;
-            this._btnRestore.Location = new System.Drawing.Point(244, 198);
+            this._btnRestore.Location = new System.Drawing.Point(12, 234);
             this._btnRestore.Name = "_btnRestore";
             this._btnRestore.Size = new System.Drawing.Size(110, 30);
             this._btnRestore.TabIndex = 13;
@@ -454,7 +447,7 @@
             // 
             this._lbFiscalYears.FormattingEnabled = true;
             this._lbFiscalYears.ItemHeight = 15;
-            this._lbFiscalYears.Location = new System.Drawing.Point(670, 130);
+            this._lbFiscalYears.Location = new System.Drawing.Point(670, 153);
             this._lbFiscalYears.Name = "_lbFiscalYears";
             this._lbFiscalYears.Size = new System.Drawing.Size(302, 139);
             this._lbFiscalYears.TabIndex = 16;
@@ -462,7 +455,7 @@
             // _lblFiscalYears
             // 
             this._lblFiscalYears.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblFiscalYears.Location = new System.Drawing.Point(670, 110);
+            this._lblFiscalYears.Location = new System.Drawing.Point(670, 133);
             this._lblFiscalYears.Name = "_lblFiscalYears";
             this._lblFiscalYears.Size = new System.Drawing.Size(302, 15);
             this._lblFiscalYears.TabIndex = 17;
@@ -483,7 +476,7 @@
             // 
             this._lblDatabases.AutoSize = true;
             this._lblDatabases.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblDatabases.Location = new System.Drawing.Point(380, 110);
+            this._lblDatabases.Location = new System.Drawing.Point(380, 133);
             this._lblDatabases.Name = "_lblDatabases";
             this._lblDatabases.Size = new System.Drawing.Size(64, 15);
             this._lblDatabases.TabIndex = 19;
@@ -492,7 +485,7 @@
             // _btnAbout
             // 
             this._btnAbout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._btnAbout.Location = new System.Drawing.Point(892, 458);
+            this._btnAbout.Location = new System.Drawing.Point(892, 461);
             this._btnAbout.Name = "_btnAbout";
             this._btnAbout.Size = new System.Drawing.Size(80, 30);
             this._btnAbout.TabIndex = 20;
@@ -500,11 +493,43 @@
             this._btnAbout.UseVisualStyleBackColor = true;
             this._btnAbout.Click += new System.EventHandler(this._btnAbout_Click);
             // 
+            // _lblActivationCode
+            // 
+            this._lblActivationCode.AutoSize = true;
+            this._lblActivationCode.Location = new System.Drawing.Point(380, 105);
+            this._lblActivationCode.Name = "_lblActivationCode";
+            this._lblActivationCode.Size = new System.Drawing.Size(112, 15);
+            this._lblActivationCode.TabIndex = 21;
+            this._lblActivationCode.Text = "ActivationCode: N/A";
+            // 
+            // _btnBackupVerifyChecksum
+            // 
+            this._btnBackupVerifyChecksum.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._btnBackupVerifyChecksum.Location = new System.Drawing.Point(128, 198);
+            this._btnBackupVerifyChecksum.Name = "_btnBackupVerifyChecksum";
+            this._btnBackupVerifyChecksum.Size = new System.Drawing.Size(226, 30);
+            this._btnBackupVerifyChecksum.TabIndex = 22;
+            this._btnBackupVerifyChecksum.Text = "Backup / Verify / Checksum";
+            this._btnBackupVerifyChecksum.UseVisualStyleBackColor = true;
+            this._btnBackupVerifyChecksum.Click += new System.EventHandler(this._btnBackupVerifyChecksum_Click);
+            // 
+            // _progressBar
+            // 
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this._progressBar.Location = new System.Drawing.Point(12, 464);
+            this._progressBar.Name = "_progressBar";
+            this._progressBar.Size = new System.Drawing.Size(874, 23);
+            this._progressBar.TabIndex = 23;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 571);
+            this.Controls.Add(this._progressBar);
+            this.Controls.Add(this._btnBackupVerifyChecksum);
+            this.Controls.Add(this._lblActivationCode);
             this.Controls.Add(this._btnAbout);
             this.Controls.Add(this._lblDatabases);
             this.Controls.Add(this._lblDbType);
@@ -519,7 +544,6 @@
             this.Controls.Add(this._btnDelete);
             this.Controls.Add(this._btnDetach);
             this.Controls.Add(this._btnCheckDb);
-            this.Controls.Add(this._btnBackupAndVerify);
             this.Controls.Add(this._btnBackup);
             this.Controls.Add(this._lbDatabases);
             this.Controls.Add(this._lblVersion);
@@ -528,6 +552,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "SQL Server Utility";
             this._gbConnection.ResumeLayout(false);
             this._gbConnection.PerformLayout();
@@ -556,7 +581,6 @@
         private System.Windows.Forms.Label _lblVersion;
         private System.Windows.Forms.ListBox _lbDatabases;
         private System.Windows.Forms.Button _btnBackup;
-        private System.Windows.Forms.Button _btnBackupAndVerify;
         private System.Windows.Forms.Button _btnDelete;
         private System.Windows.Forms.Button _btnCheckDb;
         private System.Windows.Forms.Button _btnDetach;
@@ -586,5 +610,9 @@
         private System.Windows.Forms.ToolTip _toolTip;
         private System.Windows.Forms.Label _lblDatabases;
         private System.Windows.Forms.Button _btnAbout;
+        private System.Windows.Forms.Label _lblActivationCode;
+        private System.Windows.Forms.Button _btnBackupVerifyChecksum;
+        private System.Windows.Forms.ProgressBar _progressBar;
     }
 }
+

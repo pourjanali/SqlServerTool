@@ -19,6 +19,7 @@ namespace SqlServerTool
         public string CompanyName { get; set; } = "N/A";
         public DatabaseType DbType { get; set; } = DatabaseType.Unknown;
         public List<string> FiscalYears { get; set; } = new List<string>();
+        public string ActivationCode { get; set; } = "N/A";
     }
 
 
@@ -44,7 +45,7 @@ namespace SqlServerTool
             return connection;
         }
 
-        private async Task ExecuteNonQueryAsync(string commandText, string dbName, bool useMaster = false)
+        private async Task ExecuteNonQueryAsync(string commandText, string dbName, bool useMaster = false, IProgress<int> progress = null)
         {
             var builder = new SqlConnectionStringBuilder(_connectionString);
             if (useMaster)
@@ -54,6 +55,22 @@ namespace SqlServerTool
 
             using (var connection = new SqlConnection(builder.ConnectionString))
             {
+                if (progress != null)
+                {
+                    connection.InfoMessage += (sender, e) =>
+                    {
+                        var message = e.Message;
+                        if (message.EndsWith(" percent processed."))
+                        {
+                            var percentStr = message.Split(' ')[0];
+                            if (int.TryParse(percentStr, out int percent))
+                            {
+                                progress.Report(percent);
+                            }
+                        }
+                    };
+                }
+
                 await connection.OpenAsync();
 
                 if (commandText.Trim().StartsWith("DROP", StringComparison.OrdinalIgnoreCase) ||
@@ -71,7 +88,7 @@ namespace SqlServerTool
                     await command.ExecuteNonQueryAsync();
                 }
 
-                if (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase))
+                if (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase))
                 {
                     using (var multiUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET MULTI_USER", connection))
                     {
@@ -90,7 +107,6 @@ namespace SqlServerTool
             string edition = "N/A";
             string version = "N/A";
 
-            // This query gets both the edition (e.g., "Express Edition") and the full version info.
             const string query = "SELECT SERVERPROPERTY('Edition'), @@VERSION";
 
             using (var connection = await GetOpenConnectionAsync())
@@ -100,13 +116,38 @@ namespace SqlServerTool
                 if (await reader.ReadAsync())
                 {
                     edition = reader.GetString(0);
-                    // The @@VERSION string can have multiple lines, we only want the first one.
                     version = reader.GetString(1).Split('\n')[0].Trim();
                 }
             }
             return $"{edition} - {version}";
         }
 
+        /// <summary>
+        /// Gets a simplified SQL Server version string for filenames.
+        /// </summary>
+        /// <returns>A short string like "SQL2019".</returns>
+        public async Task<string> GetSqlShortVersionAsync()
+        {
+            const string query = "SELECT @@VERSION";
+            string versionString = "";
+            using (var connection = await GetOpenConnectionAsync())
+            using (var command = new SqlCommand(query, connection))
+            {
+                versionString = (await command.ExecuteScalarAsync()) as string ?? "";
+            }
+
+            if (versionString.Contains("2022")) return "SQL2022";
+            if (versionString.Contains("2019")) return "SQL2019";
+            if (versionString.Contains("2017")) return "SQL2017";
+            if (versionString.Contains("2016")) return "SQL2016";
+            if (versionString.Contains("2014")) return "SQL2014";
+            if (versionString.Contains("2012")) return "SQL2012";
+            if (versionString.Contains("2008 R2")) return "SQL2008R2";
+            if (versionString.Contains("2008")) return "SQL2008";
+            if (versionString.Contains("2005")) return "SQL2005";
+
+            return "SQL"; // Default fallback
+        }
 
         public async Task<List<DatabaseInfo>> GetDatabasesAndFilesAsync()
         {
@@ -133,16 +174,19 @@ namespace SqlServerTool
             return databases;
         }
 
-        public async Task<bool> BackupDatabaseAsync(string databaseName, string backupFilePath, bool verify)
+        public async Task<bool> BackupDatabaseAsync(string databaseName, string backupFilePath, bool verify, IProgress<int> progress = null)
         {
+            progress?.Report(5); // Initial progress
             string commandText = $"BACKUP DATABASE [{databaseName}] TO DISK = N'{backupFilePath}' WITH CHECKSUM, NOFORMAT, INIT, NAME = N'{databaseName}-Full Database Backup', SKIP, NOREWIND, NOUNLOAD, STATS = 10";
-            await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true);
+            await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true, progress);
 
             if (verify)
             {
-                string verifyCommand = $"RESTORE VERIFYONLY FROM DISK = N'{backupFilePath}'";
-                await ExecuteNonQueryAsync(verifyCommand, databaseName, useMaster: true);
+                progress?.Report(95); // Progress before starting verification
+                string verifyCommand = $"RESTORE VERIFYONLY FROM DISK = N'{backupFilePath}' WITH CHECKSUM";
+                await ExecuteNonQueryAsync(verifyCommand, databaseName, useMaster: true, null); // Verify doesn't report granular progress
             }
+            progress?.Report(100);
             return true;
         }
 
@@ -179,9 +223,9 @@ namespace SqlServerTool
             }
 
             string resultText = output.ToString();
-            if (string.IsNullOrWhiteSpace(resultText))
+            if (string.IsNullOrWhiteSpace(resultText) || resultText.Contains("0 allocation errors and 0 consistency errors"))
             {
-                resultText = "DBCC CHECKDB reported no errors.";
+                resultText = $"DBCC CHECKDB for '{databaseName}' completed without errors.";
                 hasErrors = false;
             }
             else
@@ -199,8 +243,9 @@ namespace SqlServerTool
             return true;
         }
 
-        public async Task<bool> RestoreDatabaseAsync(string databaseName, string backupFilePath, string newMdfPath, string newLdfPath)
+        public async Task<bool> RestoreDatabaseAsync(string databaseName, string backupFilePath, string newMdfPath, string newLdfPath, IProgress<int> progress = null)
         {
+            progress?.Report(5);
             var fileList = await GetBackupFileListAsync(backupFilePath);
             if (fileList == null || fileList.Count < 2)
             {
@@ -219,7 +264,8 @@ namespace SqlServerTool
                     REPLACE,
                     STATS = 10";
 
-            await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true);
+            await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true, progress);
+            progress?.Report(100);
             return true;
         }
 
@@ -289,6 +335,17 @@ namespace SqlServerTool
                         if (result != null && result != DBNull.Value)
                         {
                             details.CompanyName = result.ToString();
+                        }
+                    }
+
+                    // #9 Get ActivationCode
+                    string activationCodeQuery = "SELECT value FROM sys.extended_properties where name = 'ActivationCode'";
+                    using (var activationCmd = new SqlCommand(activationCodeQuery, connection))
+                    {
+                        var result = await activationCmd.ExecuteScalarAsync();
+                        if (result != null && result != DBNull.Value)
+                        {
+                            details.ActivationCode = result.ToString();
                         }
                     }
 

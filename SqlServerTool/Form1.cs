@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -13,21 +14,24 @@ namespace SqlServerTool
     {
         private SqlManager _sqlManager;
         private List<DatabaseInfo> _databases = new List<DatabaseInfo>();
+        private string _sqlShortVersion = "SQL";
 
         public Form1()
         {
             InitializeComponent();
-
-            // Set application version in the title
             this.Text = $"SQL Server Utility v{Assembly.GetExecutingAssembly().GetName().Version}";
 
             _txtServer.Text = ".\\Sepidar";
-            _txtUser.Text = "";
-            _txtPassword.Text = "";
+            _txtUser.Text = "sa";
+            _txtPassword.Text = "1";
 
             _rbSqlAuth.Checked = true;
             _rbWindowsAuth.CheckedChanged += new EventHandler(_rbAuth_CheckedChanged);
             _rbSqlAuth.CheckedChanged += new EventHandler(_rbAuth_CheckedChanged);
+
+            _progressBar.Style = ProgressBarStyle.Continuous;
+            _progressBar.ForeColor = Color.Green;
+
             UpdateAuthControls();
             SetDisconnectedState();
         }
@@ -56,19 +60,41 @@ namespace SqlServerTool
             _txtPassword.Enabled = sqlAuthSelected;
         }
 
+        private void ToggleOperationControls(bool isEnabled)
+        {
+            _btnBackup.Enabled = isEnabled;
+            _btnBackupVerifyChecksum.Enabled = isEnabled;
+            _btnDelete.Enabled = isEnabled;
+            _btnCheckDb.Enabled = isEnabled;
+            _btnDetach.Enabled = isEnabled;
+            _gbAttach.Enabled = isEnabled;
+            _btnRestore.Enabled = isEnabled;
+            _lbDatabases.Enabled = isEnabled;
+        }
+
+        private void ShowProgress(string initialMessage)
+        {
+            Log(initialMessage);
+            _progressBar.Value = 0;
+            _progressBar.Visible = true;
+            this.Cursor = Cursors.WaitCursor;
+            ToggleOperationControls(false);
+        }
+
+        private void HideProgress()
+        {
+            _progressBar.Value = 0;
+            _progressBar.Visible = false;
+            this.Cursor = Cursors.Default;
+            ToggleOperationControls(true);
+        }
+
         private void SetConnectedState()
         {
             _gbConnection.Enabled = false;
             _btnConnect.Enabled = false;
             _btnDisconnect.Enabled = true;
-
-            _btnBackup.Enabled = true;
-            _btnBackupAndVerify.Enabled = true;
-            _btnDelete.Enabled = true;
-            _btnCheckDb.Enabled = true;
-            _btnDetach.Enabled = true;
-            _gbAttach.Enabled = true;
-            _btnRestore.Enabled = true;
+            ToggleOperationControls(true);
         }
 
         private void SetDisconnectedState()
@@ -87,15 +113,10 @@ namespace SqlServerTool
             _lblDbVersion.Text = "DataVersion: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
+            _lblActivationCode.Text = "ActivationCode: N/A";
 
-
-            _btnBackup.Enabled = false;
-            _btnBackupAndVerify.Enabled = false;
-            _btnDelete.Enabled = false;
-            _btnCheckDb.Enabled = false;
-            _btnDetach.Enabled = false;
-            _gbAttach.Enabled = false;
-            _btnRestore.Enabled = false;
+            ToggleOperationControls(false);
+            HideProgress();
             Log("Disconnected.");
         }
 
@@ -113,11 +134,13 @@ namespace SqlServerTool
 
             Log($"Connecting to {_txtServer.Text}...");
             _btnConnect.Enabled = false;
+            this.Cursor = Cursors.WaitCursor;
             try
             {
                 _sqlManager = new SqlManager(connectionString);
 
                 string version = await _sqlManager.GetSqlServerVersionAsync();
+                _sqlShortVersion = await _sqlManager.GetSqlShortVersionAsync();
                 _lblVersion.Text = $"Version: {version}";
                 _toolTip.SetToolTip(_lblVersion, version);
                 Log("Connection successful.");
@@ -130,6 +153,10 @@ namespace SqlServerTool
                 Log($"ERROR: {ex.Message}");
                 MessageBox.Show($"Connection Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 SetDisconnectedState();
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -149,6 +176,7 @@ namespace SqlServerTool
             _lblDbVersion.Text = "DataVersion: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
+            _lblActivationCode.Text = "ActivationCode: N/A";
             _databases = await _sqlManager.GetDatabasesAndFilesAsync();
             _lbDatabases.DataSource = _databases;
             _lbDatabases.DisplayMember = "Name";
@@ -160,7 +188,7 @@ namespace SqlServerTool
             await PerformBackup(verify: false);
         }
 
-        private async void _btnBackupAndVerify_Click(object sender, EventArgs e)
+        private async void _btnBackupVerifyChecksum_Click(object sender, EventArgs e)
         {
             await PerformBackup(verify: true);
         }
@@ -177,14 +205,16 @@ namespace SqlServerTool
             using (var sfd = new SaveFileDialog())
             {
                 sfd.Filter = "Backup File (*.bak)|*.bak";
-                sfd.FileName = $"{dbInfo.Name}_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+                sfd.FileName = $"{dbInfo.Name}_{DateTime.Now:yyyyMMdd_HHmmss}_{_sqlShortVersion}.bak";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string action = verify ? "Backing up and verifying" : "Backing up";
-                    Log($"{action} {dbInfo.Name} to {sfd.FileName}...");
+                    var progress = new Progress<int>(percent => { _progressBar.Value = Math.Min(100, percent); });
+                    ShowProgress($"{action} {dbInfo.Name} to {sfd.FileName}...");
+
                     try
                     {
-                        await _sqlManager.BackupDatabaseAsync(dbInfo.Name, sfd.FileName, verify);
+                        await _sqlManager.BackupDatabaseAsync(dbInfo.Name, sfd.FileName, verify, progress);
                         string successMsg = verify ? "Backup and verification completed successfully!" : "Backup completed successfully!";
                         Log(successMsg);
                         MessageBox.Show(successMsg, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -193,6 +223,10 @@ namespace SqlServerTool
                     {
                         Log($"ERROR: {ex.Message}");
                         MessageBox.Show($"Backup Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        HideProgress();
                     }
                 }
             }
@@ -211,7 +245,7 @@ namespace SqlServerTool
 
             if (result == DialogResult.Yes)
             {
-                Log($"Deleting database {dbInfo.Name}...");
+                ShowProgress($"Deleting database {dbInfo.Name}...");
                 try
                 {
                     await _sqlManager.DeleteDatabaseAsync(dbInfo.Name);
@@ -222,6 +256,10 @@ namespace SqlServerTool
                 {
                     Log($"ERROR: {ex.Message}");
                     MessageBox.Show($"Delete Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    HideProgress();
                 }
             }
         }
@@ -235,8 +273,7 @@ namespace SqlServerTool
             }
 
             var dbInfo = (DatabaseInfo)_lbDatabases.SelectedItem;
-            Log($"Running DBCC CHECKDB for {dbInfo.Name}. This may take a while...");
-            this.Cursor = Cursors.WaitCursor;
+            ShowProgress($"Running DBCC CHECKDB for {dbInfo.Name}. This may take a while...");
             try
             {
                 var (output, hasErrors) = await _sqlManager.CheckDatabaseAsync(dbInfo.Name);
@@ -261,7 +298,7 @@ namespace SqlServerTool
             }
             finally
             {
-                this.Cursor = Cursors.Default;
+                HideProgress();
             }
         }
 
@@ -278,7 +315,7 @@ namespace SqlServerTool
 
             if (result == DialogResult.Yes)
             {
-                Log($"Detaching database {dbInfo.Name}...");
+                ShowProgress($"Detaching database {dbInfo.Name}...");
                 try
                 {
                     await _sqlManager.DetachDatabaseAsync(dbInfo.Name);
@@ -289,6 +326,10 @@ namespace SqlServerTool
                 {
                     Log($"ERROR: {ex.Message}");
                     MessageBox.Show($"Detach Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    HideProgress();
                 }
             }
         }
@@ -301,10 +342,10 @@ namespace SqlServerTool
                 ofd.Title = "Select a Database Backup File to Restore";
                 if (ofd.ShowDialog() != DialogResult.OK) return;
 
-                this.Cursor = Cursors.WaitCursor;
+                var progress = new Progress<int>(percent => { _progressBar.Value = Math.Min(100, percent); });
+                ShowProgress($"Analyzing backup file: {ofd.FileName}");
                 try
                 {
-                    Log($"Analyzing backup file: {ofd.FileName}");
                     string originalDbName = await _sqlManager.GetOriginalDatabaseNameAsync(ofd.FileName);
                     if (string.IsNullOrEmpty(originalDbName))
                     {
@@ -338,7 +379,7 @@ namespace SqlServerTool
                     Log($"New MDF Path: {newMdfPath}");
                     Log($"New LDF Path: {newLdfPath}");
 
-                    await _sqlManager.RestoreDatabaseAsync(newDbName, ofd.FileName, newMdfPath, newLdfPath);
+                    await _sqlManager.RestoreDatabaseAsync(newDbName, ofd.FileName, newMdfPath, newLdfPath, progress);
 
                     Log("Database restored successfully.");
                     MessageBox.Show("Database restored successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -351,7 +392,7 @@ namespace SqlServerTool
                 }
                 finally
                 {
-                    this.Cursor = Cursors.Default;
+                    HideProgress();
                 }
             }
         }
@@ -366,6 +407,7 @@ namespace SqlServerTool
                 _lblDbVersion.Text = "DataVersion: Loading...";
                 _lblCompanyName.Text = "Company: Loading...";
                 _lblDbType.Text = "Type: Loading...";
+                _lblActivationCode.Text = "ActivationCode: Loading...";
                 _lbFiscalYears.DataSource = null;
 
                 try
@@ -374,6 +416,7 @@ namespace SqlServerTool
                     _lblDbVersion.Text = $"DataVersion: {details.DataVersion}";
                     _lblCompanyName.Text = $"Company: {details.CompanyName}";
                     _lblDbType.Text = $"Type: {details.DbType}";
+                    _lblActivationCode.Text = $"ActivationCode: {details.ActivationCode}";
                     _lbFiscalYears.DataSource = details.FiscalYears;
                 }
                 catch (Exception ex)
@@ -382,6 +425,7 @@ namespace SqlServerTool
                     _lblDbVersion.Text = "DataVersion: Error";
                     _lblCompanyName.Text = "Company: Error";
                     _lblDbType.Text = "Type: Error";
+                    _lblActivationCode.Text = "ActivationCode: Error";
                 }
             }
             else
@@ -391,6 +435,7 @@ namespace SqlServerTool
                 _lblDbVersion.Text = "DataVersion: N/A";
                 _lblCompanyName.Text = "Company: N/A";
                 _lblDbType.Text = "Type: N/A";
+                _lblActivationCode.Text = "ActivationCode: N/A";
                 _lbFiscalYears.DataSource = null;
             }
         }
@@ -426,7 +471,8 @@ namespace SqlServerTool
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     _txtAttachMdf.Text = ofd.FileName;
-                    _txtAttachLdf.Text = Path.ChangeExtension(ofd.FileName, ".ldf");
+                    _txtAttachLdf.Text = Path.ChangeExtension(ofd.FileName, "_log.ldf");
+                    _txtAttachDbName.Text = Path.GetFileNameWithoutExtension(ofd.FileName);
                 }
             }
         }
@@ -445,17 +491,17 @@ namespace SqlServerTool
 
         private async void _btnAttach_Click(object sender, EventArgs e)
         {
-            string dbName = _txtAttachDbName.Text;
+            string dbName = Path.GetFileNameWithoutExtension(_txtAttachMdf.Text);
             string mdfPath = _txtAttachMdf.Text;
             string ldfPath = _txtAttachLdf.Text;
 
-            if (string.IsNullOrWhiteSpace(dbName) || string.IsNullOrWhiteSpace(mdfPath) || string.IsNullOrWhiteSpace(ldfPath))
+            if (string.IsNullOrWhiteSpace(mdfPath) || string.IsNullOrWhiteSpace(ldfPath))
             {
-                MessageBox.Show("Please provide a database name, MDF path, and LDF path.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please provide an MDF path and LDF path.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            Log($"Attaching database {dbName}...");
+            ShowProgress($"Attaching database {dbName}...");
             try
             {
                 await _sqlManager.AttachDatabaseAsync(dbName, mdfPath, ldfPath);
@@ -471,6 +517,10 @@ namespace SqlServerTool
                 Log($"ERROR: {ex.Message}");
                 MessageBox.Show($"Attach Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                HideProgress();
+            }
         }
 
         private void _rbAuth_CheckedChanged(object sender, EventArgs e)
@@ -485,3 +535,4 @@ namespace SqlServerTool
         }
     }
 }
+
