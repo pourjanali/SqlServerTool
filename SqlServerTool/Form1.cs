@@ -22,8 +22,8 @@ namespace SqlServerTool
             this.Text = $"SQL Server Utility v{Assembly.GetExecutingAssembly().GetName().Version}";
 
             _txtServer.Text = ".\\Sepidar";
-            _txtUser.Text = "sa";
-            _txtPassword.Text = "1";
+            _txtUser.Text = "";
+            _txtPassword.Text = "";
 
             _rbSqlAuth.Checked = true;
             _rbWindowsAuth.CheckedChanged += new EventHandler(_rbAuth_CheckedChanged);
