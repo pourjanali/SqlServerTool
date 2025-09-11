@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SQL Server Utility")]
-[assembly: AssemblyDescription("A simple utility for managing SQL Server databases.")]
+[assembly: AssemblyDescription("A simple utility for managing SQL Server databases.\r\nContact: pourjanali.1998@gmail.com")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("HNAM Co")]
 [assembly: AssemblyProduct("SQL Server Utility")]
