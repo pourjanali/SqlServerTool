@@ -52,6 +52,11 @@ namespace SqlServerTool
             {
                 builder.InitialCatalog = "master";
             }
+            else
+            {
+                // If not using master, use the specified database context
+                builder.InitialCatalog = dbName;
+            }
 
             using (var connection = new SqlConnection(builder.ConnectionString))
             {
@@ -76,9 +81,15 @@ namespace SqlServerTool
                 if (commandText.Trim().StartsWith("DROP", StringComparison.OrdinalIgnoreCase) ||
                     commandText.Contains("sp_detach_db"))
                 {
-                    using (var singleUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE", connection))
+                    // For drop/detach, we need to be in master context to kick other users off
+                    var masterBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
+                    using (var masterConnection = new SqlConnection(masterBuilder.ConnectionString))
                     {
-                        await singleUserCmd.ExecuteNonQueryAsync();
+                        await masterConnection.OpenAsync();
+                        using (var singleUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE", masterConnection))
+                        {
+                            await singleUserCmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
 
@@ -90,9 +101,15 @@ namespace SqlServerTool
 
                 if (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase))
                 {
-                    using (var multiUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET MULTI_USER", connection))
+                    // For setting multi-user after restore, also use master context
+                    var masterBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
+                    using (var masterConnection = new SqlConnection(masterBuilder.ConnectionString))
                     {
-                        await multiUserCmd.ExecuteNonQueryAsync();
+                        await masterConnection.OpenAsync();
+                        using (var multiUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET MULTI_USER", masterConnection))
+                        {
+                            await multiUserCmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
             }
@@ -209,15 +226,16 @@ namespace SqlServerTool
             var output = new StringBuilder();
             bool hasErrors = false;
 
-            using (var connection = await GetOpenConnectionAsync())
+            var builder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = databaseName };
+            using (var connection = new SqlConnection(builder.ConnectionString))
             {
                 connection.InfoMessage += (sender, e) => {
                     output.AppendLine(e.Message);
                 };
-
+                await connection.OpenAsync();
                 using (var command = new SqlCommand($"DBCC CHECKDB ('{databaseName}') WITH ALL_ERRORMSGS, NO_INFOMSGS", connection))
                 {
-                    command.CommandTimeout = 1800;
+                    command.CommandTimeout = 1800; // 30 minutes
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -338,7 +356,6 @@ namespace SqlServerTool
                         }
                     }
 
-                    // #9 Get ActivationCode
                     string activationCodeQuery = "SELECT value FROM sys.extended_properties where name = 'ActivationCode'";
                     using (var activationCmd = new SqlCommand(activationCodeQuery, connection))
                     {
@@ -383,13 +400,76 @@ namespace SqlServerTool
                         }
                     }
                 }
-                catch (SqlException ex)
+                catch (SqlException)
                 {
-                    Console.WriteLine($"INFO: Could not retrieve details for {databaseName}. Error: {ex.Message}");
+                    // Don't pollute console for routine checks, just return details as-is
+                }
+            }
+            return details;
+        }
+
+        // #18: New method for checking database schema
+        public async Task<(bool IsMatch, string Message)> CheckDatabaseSchemaAsync(string databaseName)
+        {
+            var details = await GetDatabaseDetailsAsync(databaseName);
+            if (details.DbType == DatabaseType.Unknown)
+            {
+                return (false, $"Could not determine the database type (Sepidar/Dasht) for '{databaseName}'. Schema check aborted.");
+            }
+
+            var dashtSchemas = new HashSet<string> { "ACC", "FMK", "GNR", "JWL", "MSG", "POS", "PROP", "SCD" };
+            var sepidarSchemas = new HashSet<string> { "ACC", "AST", "CNT", "DST", "FMK", "GNR", "INV", "MRP", "MSG", "PAY", "POM", "POS", "RPA", "SCD", "SLS", "WKO" };
+            var expectedSchemas = details.DbType == DatabaseType.Dasht ? dashtSchemas : sepidarSchemas;
+
+            var actualSchemas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string query = @"
+                SELECT t.TABLE_SCHEMA
+                FROM INFORMATION_SCHEMA.TABLES AS t
+                WHERE t.TABLE_TYPE = 'BASE TABLE'
+                GROUP BY t.TABLE_SCHEMA
+                ORDER BY t.TABLE_SCHEMA;";
+
+            var builder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = databaseName };
+
+            using (var connection = new SqlConnection(builder.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new SqlCommand(query, connection))
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        actualSchemas.Add(reader.GetString(0));
+                    }
                 }
             }
 
-            return details;
+            // MODIFIED: Only ignore core system schemas. dbo, guest, etc., will now be flagged.
+            actualSchemas.Remove("INFORMATION_SCHEMA");
+            actualSchemas.Remove("sys");
+
+
+            if (actualSchemas.SetEquals(expectedSchemas))
+            {
+                return (true, $"Schema for '{databaseName}' ({details.DbType}) is correct.{Environment.NewLine}All {expectedSchemas.Count} expected schemas were found.");
+            }
+            else
+            {
+                var missing = expectedSchemas.Except(actualSchemas);
+                var extra = actualSchemas.Except(expectedSchemas);
+                var message = new StringBuilder();
+                message.AppendLine($"Schema mismatch found for '{databaseName}' ({details.DbType}):");
+                if (missing.Any())
+                {
+                    message.AppendLine($"- Missing schemas: {string.Join(", ", missing)}");
+                }
+                if (extra.Any())
+                {
+                    message.AppendLine($"- Unexpected extra schemas: {string.Join(", ", extra)}");
+                }
+                return (false, message.ToString());
+            }
         }
     }
 }
+

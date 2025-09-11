@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SqlServerTool // This namespace should match your project
+namespace SqlServerTool
 {
     /// <summary>
     /// Represents a database with its name and file paths.

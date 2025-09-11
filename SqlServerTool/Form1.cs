@@ -1,9 +1,12 @@
-﻿using Microsoft.VisualBasic;
+﻿using Microsoft.Data.Sql;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -62,13 +65,8 @@ namespace SqlServerTool
 
         private void ToggleOperationControls(bool isEnabled)
         {
-            _btnBackup.Enabled = isEnabled;
-            _btnBackupVerifyChecksum.Enabled = isEnabled;
-            _btnDelete.Enabled = isEnabled;
-            _btnCheckDb.Enabled = isEnabled;
-            _btnDetach.Enabled = isEnabled;
+            _gbDbOperations.Enabled = isEnabled;
             _gbAttach.Enabled = isEnabled;
-            _btnRestore.Enabled = isEnabled;
             _lbDatabases.Enabled = isEnabled;
         }
 
@@ -86,22 +84,38 @@ namespace SqlServerTool
             _progressBar.Value = 0;
             _progressBar.Visible = false;
             this.Cursor = Cursors.Default;
-            ToggleOperationControls(true);
+            var isConnected = _sqlManager != null;
+            ToggleOperationControls(isConnected);
         }
 
+        // #6: Fix Connect/Disconnect button usability
         private void SetConnectedState()
         {
-            _gbConnection.Enabled = false;
+            // Instead of disabling the whole groupbox, disable individual controls
+            _txtServer.Enabled = false;
+            _btnBrowseServers.Enabled = false;
+            _rbWindowsAuth.Enabled = false;
+            _rbSqlAuth.Enabled = false;
+            _txtUser.Enabled = false;
+            _txtPassword.Enabled = false;
             _btnConnect.Enabled = false;
-            _btnDisconnect.Enabled = true;
+
+            _btnDisconnect.Enabled = true; // This button will now be usable
             ToggleOperationControls(true);
         }
 
+        // #6: Fix Connect/Disconnect button usability
         private void SetDisconnectedState()
         {
             _sqlManager = null;
-            _gbConnection.Enabled = true;
+            // Explicitly enable connection controls
+            _txtServer.Enabled = true;
+            _btnBrowseServers.Enabled = true;
+            _rbWindowsAuth.Enabled = true;
+            _rbSqlAuth.Enabled = true;
+            UpdateAuthControls(); // This correctly handles enabling/disabling user/pass fields based on auth type
             _btnConnect.Enabled = true;
+
             _btnDisconnect.Enabled = false;
 
             _lbDatabases.DataSource = null;
@@ -133,8 +147,10 @@ namespace SqlServerTool
             }
 
             Log($"Connecting to {_txtServer.Text}...");
-            _btnConnect.Enabled = false;
             this.Cursor = Cursors.WaitCursor;
+            _btnConnect.Enabled = false;
+            _btnDisconnect.Enabled = false;
+
             try
             {
                 _sqlManager = new SqlManager(connectionString);
@@ -145,8 +161,8 @@ namespace SqlServerTool
                 _toolTip.SetToolTip(_lblVersion, version);
                 Log("Connection successful.");
 
+                SetConnectedState(); // Set state before refreshing list
                 await RefreshDatabaseList();
-                SetConnectedState();
             }
             catch (Exception ex)
             {
@@ -160,9 +176,79 @@ namespace SqlServerTool
             }
         }
 
+
         private void _btnDisconnect_Click(object sender, EventArgs e)
         {
             SetDisconnectedState();
+        }
+
+        // #15: Add button to browse for SQL servers
+        private async void _btnBrowseServers_Click(object sender, EventArgs e)
+        {
+            Log("Searching for local and network SQL Server instances...");
+            this.Cursor = Cursors.WaitCursor;
+            _gbConnection.Enabled = false;
+
+            try
+            {
+                DataTable sqlSources = await Task.Run(() => SqlDataSourceEnumerator.Instance.GetDataSources());
+
+                if (sqlSources.Rows.Count == 0)
+                {
+                    MessageBox.Show("No SQL Server instances found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var servers = new List<string>();
+                foreach (DataRow row in sqlSources.Rows)
+                {
+                    string serverName = row["ServerName"].ToString();
+                    string instanceName = row["InstanceName"].ToString();
+                    if (!string.IsNullOrEmpty(instanceName))
+                    {
+                        servers.Add($"{serverName}\\{instanceName}");
+                    }
+                    else
+                    {
+                        servers.Add(serverName);
+                    }
+                }
+
+                // Use a simple selection form
+                using (var selectionForm = new Form())
+                {
+                    selectionForm.Text = "Select SQL Server Instance";
+                    selectionForm.StartPosition = FormStartPosition.CenterParent;
+                    selectionForm.Size = new System.Drawing.Size(300, 400);
+
+                    var listBox = new ListBox { Dock = DockStyle.Fill };
+                    listBox.DataSource = servers;
+                    selectionForm.Controls.Add(listBox);
+
+                    var selectButton = new Button { Text = "Select", Dock = DockStyle.Bottom };
+                    selectButton.Click += (s, args) =>
+                    {
+                        if (listBox.SelectedItem != null)
+                        {
+                            _txtServer.Text = listBox.SelectedItem.ToString();
+                        }
+                        selectionForm.Close();
+                    };
+                    selectionForm.Controls.Add(selectButton);
+                    selectionForm.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"ERROR browsing for SQL instances: {ex.Message}");
+                MessageBox.Show($"Could not retrieve SQL Server instances: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+                _gbConnection.Enabled = true;
+                Log("Finished searching for SQL Server instances.");
+            }
         }
 
         private async Task RefreshDatabaseList()
@@ -295,6 +381,42 @@ namespace SqlServerTool
             {
                 Log($"ERROR: {ex.Message}");
                 MessageBox.Show($"DBCC CHECKDB Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                HideProgress();
+            }
+        }
+
+        // #18: Schema Check button handler
+        private async void _btnSchemaCheck_Click(object sender, EventArgs e)
+        {
+            if (_lbDatabases.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a database first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var dbInfo = (DatabaseInfo)_lbDatabases.SelectedItem;
+            ShowProgress($"Checking table schema for {dbInfo.Name}...");
+            try
+            {
+                var (isMatch, message) = await _sqlManager.CheckDatabaseSchemaAsync(dbInfo.Name);
+                Log(message.Replace(Environment.NewLine, " ")); // Log as a single line
+
+                if (isMatch)
+                {
+                    MessageBox.Show(message, "Schema Check: Passed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(message, "Schema Check: Mismatch Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"ERROR: Schema check failed. {ex.Message}");
+                MessageBox.Show($"Schema check failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -531,7 +653,7 @@ namespace SqlServerTool
         private void _btnAbout_Click(object sender, EventArgs e)
         {
             AboutBox about = new AboutBox();
-            about.ShowDialog();
+            about.ShowDialog(this);
         }
     }
 }

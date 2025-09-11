@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace SqlServerTool // This namespace should match your project
+namespace SqlServerTool
 {
     internal static class Program
     {
@@ -13,7 +13,7 @@ namespace SqlServerTool // This namespace should match your project
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1()); // This launches your main window
+            Application.Run(new Form1());
         }
     }
 }
