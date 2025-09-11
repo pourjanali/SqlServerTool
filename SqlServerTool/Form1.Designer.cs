@@ -19,7 +19,6 @@
             this.components = new System.ComponentModel.Container();
             this._gbConnection = new System.Windows.Forms.GroupBox();
             this._btnBrowseServers = new System.Windows.Forms.Button();
-            this._btnDisconnect = new System.Windows.Forms.Button();
             this._rbWindowsAuth = new System.Windows.Forms.RadioButton();
             this._rbSqlAuth = new System.Windows.Forms.RadioButton();
             this._lblServer = new System.Windows.Forms.Label();
@@ -28,6 +27,7 @@
             this._txtUser = new System.Windows.Forms.TextBox();
             this._lblPassword = new System.Windows.Forms.Label();
             this._txtPassword = new System.Windows.Forms.TextBox();
+            this._btnDisconnect = new System.Windows.Forms.Button();
             this._btnConnect = new System.Windows.Forms.Button();
             this._lblVersion = new System.Windows.Forms.Label();
             this._lbDatabases = new System.Windows.Forms.ListBox();
@@ -59,13 +59,13 @@
             this._lblFiscalYears = new System.Windows.Forms.Label();
             this._lblDbType = new System.Windows.Forms.Label();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._btnSchemaCheck = new System.Windows.Forms.Button();
             this._lblDatabases = new System.Windows.Forms.Label();
             this._btnAbout = new System.Windows.Forms.Button();
             this._lblActivationCode = new System.Windows.Forms.Label();
             this._btnBackupVerifyChecksum = new System.Windows.Forms.Button();
             this._progressBar = new System.Windows.Forms.ProgressBar();
             this._gbDbOperations = new System.Windows.Forms.GroupBox();
-            this._btnSchemaCheck = new System.Windows.Forms.Button();
             this._gbConnection.SuspendLayout();
             this._gbFilePaths.SuspendLayout();
             this._gbAttach.SuspendLayout();
@@ -100,16 +100,6 @@
             this._toolTip.SetToolTip(this._btnBrowseServers, "Browse for SQL Server instances");
             this._btnBrowseServers.UseVisualStyleBackColor = true;
             this._btnBrowseServers.Click += new System.EventHandler(this._btnBrowseServers_Click);
-            // 
-            // _btnDisconnect
-            // 
-            this._btnDisconnect.Location = new System.Drawing.Point(282, 168);
-            this._btnDisconnect.Name = "_btnDisconnect";
-            this._btnDisconnect.Size = new System.Drawing.Size(80, 28);
-            this._btnDisconnect.TabIndex = 9;
-            this._btnDisconnect.Text = "Disconnect";
-            this._btnDisconnect.UseVisualStyleBackColor = true;
-            this._btnDisconnect.Click += new System.EventHandler(this._btnDisconnect_Click);
             // 
             // _rbWindowsAuth
             // 
@@ -182,6 +172,16 @@
             this._txtPassword.TabIndex = 5;
             this._txtPassword.UseSystemPasswordChar = true;
             // 
+            // _btnDisconnect
+            // 
+            this._btnDisconnect.Location = new System.Drawing.Point(282, 168);
+            this._btnDisconnect.Name = "_btnDisconnect";
+            this._btnDisconnect.Size = new System.Drawing.Size(80, 28);
+            this._btnDisconnect.TabIndex = 9;
+            this._btnDisconnect.Text = "Disconnect";
+            this._btnDisconnect.UseVisualStyleBackColor = true;
+            this._btnDisconnect.Click += new System.EventHandler(this._btnDisconnect_Click);
+            // 
             // _btnConnect
             // 
             this._btnConnect.Location = new System.Drawing.Point(196, 168);
@@ -194,7 +194,7 @@
             // 
             // _lblVersion
             // 
-            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._lblVersion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._lblVersion.Location = new System.Drawing.Point(380, 15);
@@ -250,6 +250,7 @@
             // _btnDetach
             // 
             this._btnDetach.BackColor = System.Drawing.Color.Khaki;
+            this._btnDetach.Enabled = false;
             this._btnDetach.Location = new System.Drawing.Point(238, 58);
             this._btnDetach.Name = "_btnDetach";
             this._btnDetach.Size = new System.Drawing.Size(110, 30);
@@ -260,8 +261,8 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
             this._rtbLog.Location = new System.Drawing.Point(12, 532);
@@ -350,6 +351,7 @@
             // _btnAttach
             // 
             this._btnAttach.BackColor = System.Drawing.Color.LightGreen;
+            this._btnAttach.Enabled = false;
             this._btnAttach.Location = new System.Drawing.Point(840, 17);
             this._btnAttach.Name = "_btnAttach";
             this._btnAttach.Size = new System.Drawing.Size(110, 30);
@@ -387,6 +389,7 @@
             // 
             // _btnBrowseMdf
             // 
+            this._btnBrowseMdf.Enabled = false;
             this._btnBrowseMdf.Location = new System.Drawing.Point(800, 17);
             this._btnBrowseMdf.Name = "_btnBrowseMdf";
             this._btnBrowseMdf.Size = new System.Drawing.Size(30, 25);
@@ -445,7 +448,7 @@
             this._lblDbVersion.AutoSize = true;
             this._lblDbVersion.Location = new System.Drawing.Point(380, 45);
             this._lblDbVersion.Name = "_lblDbVersion";
-            this._lblDbVersion.Size = new System.Drawing.Size(95, 15);
+            this._lblDbVersion.Size = new System.Drawing.Size(97, 15);
             this._lblDbVersion.TabIndex = 14;
             this._lblDbVersion.Text = "DataVersion: N/A";
             // 
@@ -454,7 +457,7 @@
             this._lblCompanyName.AutoSize = true;
             this._lblCompanyName.Location = new System.Drawing.Point(380, 65);
             this._lblCompanyName.Name = "_lblCompanyName";
-            this._lblCompanyName.Size = new System.Drawing.Size(88, 15);
+            this._lblCompanyName.Size = new System.Drawing.Size(87, 15);
             this._lblCompanyName.TabIndex = 15;
             this._lblCompanyName.Text = "Company: N/A";
             // 
@@ -487,13 +490,27 @@
             this._lblDbType.TabIndex = 18;
             this._lblDbType.Text = "Type: N/A";
             // 
+            // _btnSchemaCheck
+            // 
+            this._btnSchemaCheck.BackColor = System.Drawing.Color.Thistle;
+            this._btnSchemaCheck.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this._btnSchemaCheck.Location = new System.Drawing.Point(238, 22);
+            this._btnSchemaCheck.Name = "_btnSchemaCheck";
+            this._btnSchemaCheck.Size = new System.Drawing.Size(110, 30);
+            this._btnSchemaCheck.TabIndex = 23;
+            this._btnSchemaCheck.Text = "Check Schema";
+            this._toolTip.SetToolTip(this._btnSchemaCheck, "Compares the database\'s table schemas against the expected standard for its type " +
+        "(Dasht or Sepidar).");
+            this._btnSchemaCheck.UseVisualStyleBackColor = false;
+            this._btnSchemaCheck.Click += new System.EventHandler(this._btnSchemaCheck_Click);
+            // 
             // _lblDatabases
             // 
             this._lblDatabases.AutoSize = true;
             this._lblDatabases.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._lblDatabases.Location = new System.Drawing.Point(380, 133);
             this._lblDatabases.Name = "_lblDatabases";
-            this._lblDatabases.Size = new System.Drawing.Size(64, 15);
+            this._lblDatabases.Size = new System.Drawing.Size(63, 15);
             this._lblDatabases.TabIndex = 19;
             this._lblDatabases.Text = "Databases";
             // 
@@ -513,7 +530,7 @@
             this._lblActivationCode.AutoSize = true;
             this._lblActivationCode.Location = new System.Drawing.Point(380, 105);
             this._lblActivationCode.Name = "_lblActivationCode";
-            this._lblActivationCode.Size = new System.Drawing.Size(112, 15);
+            this._lblActivationCode.Size = new System.Drawing.Size(117, 15);
             this._lblActivationCode.TabIndex = 21;
             this._lblActivationCode.Text = "ActivationCode: N/A";
             // 
@@ -530,7 +547,7 @@
             // 
             // _progressBar
             // 
-            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._progressBar.Location = new System.Drawing.Point(12, 501);
             this._progressBar.Name = "_progressBar";
@@ -552,20 +569,6 @@
             this._gbDbOperations.TabIndex = 24;
             this._gbDbOperations.TabStop = false;
             this._gbDbOperations.Text = "Database Operations";
-            // 
-            // _btnSchemaCheck
-            // 
-            this._btnSchemaCheck.BackColor = System.Drawing.Color.Thistle;
-            this._btnSchemaCheck.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this._btnSchemaCheck.Location = new System.Drawing.Point(238, 22);
-            this._btnSchemaCheck.Name = "_btnSchemaCheck";
-            this._btnSchemaCheck.Size = new System.Drawing.Size(110, 30);
-            this._btnSchemaCheck.TabIndex = 23;
-            this._btnSchemaCheck.Text = "Check Schema";
-            this._toolTip.SetToolTip(this._btnSchemaCheck, "Compares the database\'s table schemas against the expected standard for its type " +
-        "(Dasht or Sepidar).");
-            this._btnSchemaCheck.UseVisualStyleBackColor = false;
-            this._btnSchemaCheck.Click += new System.EventHandler(this._btnSchemaCheck_Click);
             // 
             // Form1
             // 

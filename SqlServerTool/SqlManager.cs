@@ -78,17 +78,34 @@ namespace SqlServerTool
 
                 await connection.OpenAsync();
 
-                if (commandText.Trim().StartsWith("DROP", StringComparison.OrdinalIgnoreCase) ||
-                    commandText.Contains("sp_detach_db"))
+                // This block handles setting SINGLE_USER and MULTI_USER modes
+                // for operations like DROP, DETACH, and RESTORE
+                bool needsSingleUserMode = commandText.Trim().StartsWith("DROP", StringComparison.OrdinalIgnoreCase) ||
+                                           commandText.IndexOf("sp_detach_db", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                           (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase));
+
+                if (needsSingleUserMode)
                 {
-                    // For drop/detach, we need to be in master context to kick other users off
+                    // For drop/detach/restore, we need to be in master context to kick other users off
                     var masterBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
                     using (var masterConnection = new SqlConnection(masterBuilder.ConnectionString))
                     {
                         await masterConnection.OpenAsync();
-                        using (var singleUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE", masterConnection))
+                        // Attempt to set to SINGLE_USER. Use a try-catch to ensure we always try to revert.
+                        try
                         {
-                            await singleUserCmd.ExecuteNonQueryAsync();
+                            using (var singleUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE", masterConnection))
+                            {
+                                await singleUserCmd.ExecuteNonQueryAsync();
+                            }
+                        }
+                        catch (SqlException ex)
+                        {
+                            // Log or handle if setting to single user fails (e.g., db doesn't exist)
+                            // For detach/drop, it might mean the db is already gone.
+                            // For restore, it might fail if db doesn't exist for REPLACE.
+                            // We'll let the main command try and fail if this was fatal.
+                            Console.WriteLine($"Warning: Could not set database {dbName} to SINGLE_USER: {ex.Message}");
                         }
                     }
                 }
@@ -99,19 +116,30 @@ namespace SqlServerTool
                     await command.ExecuteNonQueryAsync();
                 }
 
-                if (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase))
+                // If the command was a RESTORE or a successful DETACH, try to set it back to MULTI_USER
+                bool wasRestore = commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase);
+                bool wasDetach = commandText.IndexOf("sp_detach_db", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (wasRestore)
                 {
-                    // For setting multi-user after restore, also use master context
                     var masterBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
                     using (var masterConnection = new SqlConnection(masterBuilder.ConnectionString))
                     {
                         await masterConnection.OpenAsync();
-                        using (var multiUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET MULTI_USER", masterConnection))
+                        try
                         {
-                            await multiUserCmd.ExecuteNonQueryAsync();
+                            using (var multiUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET MULTI_USER", masterConnection))
+                            {
+                                await multiUserCmd.ExecuteNonQueryAsync();
+                            }
+                        }
+                        catch (SqlException ex)
+                        {
+                            Console.WriteLine($"Warning: Could not set database {dbName} to MULTI_USER after restore: {ex.Message}");
                         }
                     }
                 }
+                // For detach, we don't set it back to MULTI_USER because the database is no longer attached.
             }
         }
 
@@ -256,6 +284,7 @@ namespace SqlServerTool
 
         public async Task<bool> DetachDatabaseAsync(string databaseName)
         {
+            // Now handled by ExecuteNonQueryAsync for consistency and robust single-user mode handling
             string commandText = $"EXEC sp_detach_db '{databaseName}', 'true'";
             await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true);
             return true;

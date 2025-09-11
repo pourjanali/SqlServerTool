@@ -17,7 +17,7 @@ namespace SqlServerTool
             this.labelCopyright.Text = AssemblyCopyright;
             this.labelCompanyName.Text = AssemblyCompany;
             this.textBoxDescription.Text = AssemblyDescription;
-            this.linkLabelInfo.Text = "https://github.com/pourjanali"; // TODO: Change this to your website or email
+            this.linkLabelInfo.Text = "https://github.com/pourjanali or pourjanali.1998@gmail.com"; // TODO: Change this to your website or email
         }
 
         #region Assembly Attribute Accessors
