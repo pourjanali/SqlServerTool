@@ -417,6 +417,41 @@ namespace SqlServerTool
             }
         }
 
+        private async void _btnCheckTriggers_Click(object sender, EventArgs e)
+        {
+            if (_lbDatabases.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a database first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var dbInfo = (DatabaseInfo)_lbDatabases.SelectedItem;
+            ShowProgress($"Checking triggers for {dbInfo.Name}...");
+            try
+            {
+                var (isOk, message) = await _sqlManager.CheckDatabaseTriggersAsync(dbInfo.Name);
+                Log(message.Replace(Environment.NewLine, " "));
+
+                if (isOk)
+                {
+                    MessageBox.Show(message, "Trigger Check: Passed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(message, "Trigger Check: Issues Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"ERROR: Trigger check failed. {ex.Message}");
+                MessageBox.Show($"Trigger check failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                HideProgress();
+            }
+        }
+
         private async void _btnDetach_Click(object sender, EventArgs e)
         {
             if (_lbDatabases.SelectedItem == null)
@@ -651,4 +686,3 @@ namespace SqlServerTool
         }
     }
 }
-

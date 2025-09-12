@@ -60,6 +60,7 @@
             this._lblDbType = new System.Windows.Forms.Label();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._btnSchemaCheck = new System.Windows.Forms.Button();
+            this._btnCheckTriggers = new System.Windows.Forms.Button();
             this._lblDatabases = new System.Windows.Forms.Label();
             this._btnAbout = new System.Windows.Forms.Button();
             this._lblActivationCode = new System.Windows.Forms.Label();
@@ -194,7 +195,7 @@
             // 
             // _lblVersion
             // 
-            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._lblVersion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._lblVersion.Location = new System.Drawing.Point(380, 15);
@@ -227,9 +228,9 @@
             // _btnDelete
             // 
             this._btnDelete.BackColor = System.Drawing.Color.LightCoral;
-            this._btnDelete.Location = new System.Drawing.Point(6, 94);
+            this._btnDelete.Location = new System.Drawing.Point(122, 94);
             this._btnDelete.Name = "_btnDelete";
-            this._btnDelete.Size = new System.Drawing.Size(342, 30);
+            this._btnDelete.Size = new System.Drawing.Size(226, 30);
             this._btnDelete.TabIndex = 4;
             this._btnDelete.Text = "Delete DB";
             this._btnDelete.UseVisualStyleBackColor = false;
@@ -238,7 +239,7 @@
             // _btnCheckDb
             // 
             this._btnCheckDb.BackColor = System.Drawing.Color.LightSkyBlue;
-            this._btnCheckDb.Location = new System.Drawing.Point(122, 58);
+            this._btnCheckDb.Location = new System.Drawing.Point(6, 58);
             this._btnCheckDb.Name = "_btnCheckDb";
             this._btnCheckDb.Size = new System.Drawing.Size(110, 30);
             this._btnCheckDb.TabIndex = 11;
@@ -250,7 +251,7 @@
             // _btnDetach
             // 
             this._btnDetach.BackColor = System.Drawing.Color.Khaki;
-            this._btnDetach.Location = new System.Drawing.Point(238, 58);
+            this._btnDetach.Location = new System.Drawing.Point(6, 94);
             this._btnDetach.Name = "_btnDetach";
             this._btnDetach.Size = new System.Drawing.Size(110, 30);
             this._btnDetach.TabIndex = 12;
@@ -260,8 +261,8 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
             this._rtbLog.Location = new System.Drawing.Point(12, 532);
@@ -412,7 +413,7 @@
             // 
             this._txtAttachDbName.Location = new System.Drawing.Point(120, -4);
             this._txtAttachDbName.Name = "_txtAttachDbName";
-            this._txtAttachDbName.Size = new System.Drawing.Size(250, 23);
+            this._txtAttachDbName.Size = new System.Drawing.Size(250, 20);
             this._txtAttachDbName.TabIndex = 1;
             this._txtAttachDbName.Visible = false;
             // 
@@ -429,7 +430,7 @@
             // _btnRestore
             // 
             this._btnRestore.BackColor = System.Drawing.Color.MediumAquamarine;
-            this._btnRestore.Location = new System.Drawing.Point(6, 58);
+            this._btnRestore.Location = new System.Drawing.Point(238, 22);
             this._btnRestore.Name = "_btnRestore";
             this._btnRestore.Size = new System.Drawing.Size(110, 30);
             this._btnRestore.TabIndex = 13;
@@ -487,8 +488,8 @@
             // _btnSchemaCheck
             // 
             this._btnSchemaCheck.BackColor = System.Drawing.Color.Thistle;
-            this._btnSchemaCheck.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this._btnSchemaCheck.Location = new System.Drawing.Point(238, 22);
+            this._btnSchemaCheck.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this._btnSchemaCheck.Location = new System.Drawing.Point(122, 58);
             this._btnSchemaCheck.Name = "_btnSchemaCheck";
             this._btnSchemaCheck.Size = new System.Drawing.Size(110, 30);
             this._btnSchemaCheck.TabIndex = 23;
@@ -497,6 +498,18 @@
         "(Dasht or Sepidar).");
             this._btnSchemaCheck.UseVisualStyleBackColor = false;
             this._btnSchemaCheck.Click += new System.EventHandler(this._btnSchemaCheck_Click);
+            // 
+            // _btnCheckTriggers
+            // 
+            this._btnCheckTriggers.BackColor = System.Drawing.Color.LightGoldenrodYellow;
+            this._btnCheckTriggers.Location = new System.Drawing.Point(238, 58);
+            this._btnCheckTriggers.Name = "_btnCheckTriggers";
+            this._btnCheckTriggers.Size = new System.Drawing.Size(110, 30);
+            this._btnCheckTriggers.TabIndex = 24;
+            this._btnCheckTriggers.Text = "Check Triggers";
+            this._toolTip.SetToolTip(this._btnCheckTriggers, "Checks for unexpected or forbidden database triggers.");
+            this._btnCheckTriggers.UseVisualStyleBackColor = false;
+            this._btnCheckTriggers.Click += new System.EventHandler(this._btnCheckTriggers_Click);
             // 
             // _lblDatabases
             // 
@@ -511,11 +524,11 @@
             // _btnAbout
             // 
             this._btnAbout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this._btnAbout.Location = new System.Drawing.Point(892, 498);
+            this._btnAbout.Location = new System.Drawing.Point(12, 168);
             this._btnAbout.Name = "_btnAbout";
-            this._btnAbout.Size = new System.Drawing.Size(80, 30);
+            this._btnAbout.Size = new System.Drawing.Size(178, 28);
             this._btnAbout.TabIndex = 20;
-            this._btnAbout.Text = "About";
+            this._btnAbout.Text = "About SQL Server Utility";
             this._btnAbout.UseVisualStyleBackColor = true;
             this._btnAbout.Click += new System.EventHandler(this._btnAbout_Click);
             // 
@@ -541,15 +554,16 @@
             // 
             // _progressBar
             // 
-            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this._progressBar.Location = new System.Drawing.Point(12, 501);
+            this._progressBar.Location = new System.Drawing.Point(380, 298);
             this._progressBar.Name = "_progressBar";
-            this._progressBar.Size = new System.Drawing.Size(874, 23);
+            this._progressBar.Size = new System.Drawing.Size(592, 30);
             this._progressBar.TabIndex = 23;
             // 
             // _gbDbOperations
             // 
+            this._gbDbOperations.Controls.Add(this._btnCheckTriggers);
             this._gbDbOperations.Controls.Add(this._btnSchemaCheck);
             this._gbDbOperations.Controls.Add(this._btnBackup);
             this._gbDbOperations.Controls.Add(this._btnRestore);
@@ -656,6 +670,6 @@
         private System.Windows.Forms.Button _btnBrowseServers;
         private System.Windows.Forms.GroupBox _gbDbOperations;
         private System.Windows.Forms.Button _btnSchemaCheck;
+        private System.Windows.Forms.Button _btnCheckTriggers;
     }
 }
-

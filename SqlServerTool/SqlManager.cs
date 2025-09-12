@@ -22,6 +22,18 @@ namespace SqlServerTool
         public string ActivationCode { get; set; } = "N/A";
     }
 
+    /// <summary>
+    /// Represents details of a single SQL trigger.
+    /// </summary>
+    public class TriggerInfo
+    {
+        public string Name { get; set; }
+        public string Table { get; set; }
+        public string Event { get; set; }
+        public string Status { get; set; }
+        public override string ToString() => $"'{Name}' on table '{Table}' (Event: {Event}, Status: {Status})";
+    }
+
 
     /// <summary>
     /// Core class for interacting with a SQL Server instance.
@@ -542,6 +554,98 @@ namespace SqlServerTool
                 return (false, message.ToString());
             }
         }
+
+        public async Task<(bool IsOk, string Message)> CheckDatabaseTriggersAsync(string databaseName)
+        {
+            var details = await GetDatabaseDetailsAsync(databaseName);
+            if (details.DbType == DatabaseType.Unknown)
+            {
+                return (false, $"Could not determine the database type (Sepidar/Dasht) for '{databaseName}'. Trigger check aborted.");
+            }
+
+            var foundTriggers = new List<TriggerInfo>();
+            string query = @"
+                SELECT
+                    trg.name AS trigger_name,
+                    ISNULL(SCHEMA_NAME(tab.schema_id) + '.' + tab.name, 'DATABASE') AS [table],
+                    (CASE WHEN OBJECTPROPERTY(trg.object_id, 'ExecIsUpdateTrigger') = 1 THEN 'Update ' ELSE '' END +
+                     CASE WHEN OBJECTPROPERTY(trg.object_id, 'ExecIsDeleteTrigger') = 1 THEN 'Delete ' ELSE '' END +
+                     CASE WHEN OBJECTPROPERTY(trg.object_id, 'ExecIsInsertTrigger') = 1 THEN 'Insert' ELSE '' END
+                    ) AS [event],
+                    CASE WHEN is_disabled = 1 THEN 'Disabled' ELSE 'Active' END AS [status]
+                FROM sys.triggers trg
+                LEFT JOIN sys.objects tab ON trg.parent_id = tab.object_id
+                WHERE trg.is_ms_shipped = 0
+                ORDER BY trg.name;";
+
+            var builder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = databaseName };
+
+            using (var connection = new SqlConnection(builder.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new SqlCommand(query, connection))
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        foundTriggers.Add(new TriggerInfo
+                        {
+                            Name = reader["trigger_name"] as string,
+                            Table = reader["table"] as string,
+                            Event = (reader["event"] as string)?.Trim(),
+                            Status = reader["status"] as string
+                        });
+                    }
+                }
+            }
+
+            if (details.DbType == DatabaseType.Sepidar)
+            {
+                if (foundTriggers.Any())
+                {
+                    var message = new StringBuilder();
+                    message.AppendLine($"RED FLAG: Sepidar database '{databaseName}' should not have any triggers, but {foundTriggers.Count} were found:");
+                    foreach (var trigger in foundTriggers)
+                    {
+                        message.AppendLine($"- {trigger}");
+                    }
+                    return (false, message.ToString());
+                }
+                else
+                {
+                    return (true, $"SUCCESS: No triggers found in Sepidar database '{databaseName}', as expected.");
+                }
+            }
+            else // Dasht
+            {
+                var allowedTriggers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "ItemChangeVersion",
+                    "ItemGroupChangeVersion",
+                    "ItemGroupItemChangeVersion",
+                    "ItemSalePriceChangeVersion",
+                    "ItemSubUnitChangeVersion",
+                    "PartyChangeVersion",
+                    "UserChangeVersion"
+                };
+
+                var unexpectedTriggers = foundTriggers.Where(t => !allowedTriggers.Contains(t.Name)).ToList();
+
+                if (unexpectedTriggers.Any())
+                {
+                    var message = new StringBuilder();
+                    message.AppendLine($"WARNING: Found {unexpectedTriggers.Count} unexpected trigger(s) in Dasht database '{databaseName}':");
+                    foreach (var trigger in unexpectedTriggers)
+                    {
+                        message.AppendLine($"- {trigger}");
+                    }
+                    return (false, message.ToString());
+                }
+                else
+                {
+                    return (true, $"SUCCESS: All {foundTriggers.Count} triggers found in Dasht database '{databaseName}' are standard system triggers.");
+                }
+            }
+        }
     }
 }
-
