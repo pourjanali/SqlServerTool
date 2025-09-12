@@ -124,6 +124,9 @@ namespace SqlServerTool
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
             _lblActivationCode.Text = "ActivationCode: N/A";
+            _lblUserAccessMode.Text = "Access Mode: N/A";
+            _lblUserAccessMode.ForeColor = SystemColors.ControlText;
+
 
             ToggleOperationControls(false);
             HideProgress();
@@ -257,6 +260,8 @@ namespace SqlServerTool
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
             _lblActivationCode.Text = "ActivationCode: N/A";
+            _lblUserAccessMode.Text = "Access Mode: N/A";
+            _lblUserAccessMode.ForeColor = SystemColors.ControlText;
             _databases = await _sqlManager.GetDatabasesAndFilesAsync();
             _lbDatabases.DataSource = _databases;
             _lbDatabases.DisplayMember = "Name";
@@ -558,6 +563,8 @@ namespace SqlServerTool
                 _lblCompanyName.Text = "Company: Loading...";
                 _lblDbType.Text = "Type: Loading...";
                 _lblActivationCode.Text = "ActivationCode: Loading...";
+                _lblUserAccessMode.Text = "Access Mode: Loading...";
+                _lblUserAccessMode.ForeColor = SystemColors.ControlText;
                 _lbFiscalYears.DataSource = null;
 
                 try
@@ -567,6 +574,24 @@ namespace SqlServerTool
                     _lblCompanyName.Text = $"Company: {details.CompanyName}";
                     _lblDbType.Text = $"Type: {details.DbType}";
                     _lblActivationCode.Text = $"ActivationCode: {details.ActivationCode}";
+                    _lblUserAccessMode.Text = $"Access Mode: {details.UserAccessMode}";
+
+                    switch (details.UserAccessMode.ToUpper())
+                    {
+                        case "MULTI_USER":
+                            _lblUserAccessMode.ForeColor = Color.DarkGreen;
+                            break;
+                        case "SINGLE_USER":
+                            _lblUserAccessMode.ForeColor = Color.OrangeRed;
+                            break;
+                        case "RESTRICTED_USER":
+                            _lblUserAccessMode.ForeColor = Color.DarkOrange;
+                            break;
+                        default:
+                            _lblUserAccessMode.ForeColor = SystemColors.ControlText;
+                            break;
+                    }
+
                     _lbFiscalYears.DataSource = details.FiscalYears;
                 }
                 catch (Exception ex)
@@ -576,6 +601,8 @@ namespace SqlServerTool
                     _lblCompanyName.Text = "Company: Error";
                     _lblDbType.Text = "Type: Error";
                     _lblActivationCode.Text = "ActivationCode: Error";
+                    _lblUserAccessMode.Text = "Access Mode: Error";
+                    _lblUserAccessMode.ForeColor = Color.Red;
                 }
             }
             else
@@ -586,6 +613,8 @@ namespace SqlServerTool
                 _lblCompanyName.Text = "Company: N/A";
                 _lblDbType.Text = "Type: N/A";
                 _lblActivationCode.Text = "ActivationCode: N/A";
+                _lblUserAccessMode.Text = "Access Mode: N/A";
+                _lblUserAccessMode.ForeColor = SystemColors.ControlText;
                 _lbFiscalYears.DataSource = null;
             }
         }

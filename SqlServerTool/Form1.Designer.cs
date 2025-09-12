@@ -67,6 +67,7 @@
             this._btnBackupVerifyChecksum = new System.Windows.Forms.Button();
             this._progressBar = new System.Windows.Forms.ProgressBar();
             this._gbDbOperations = new System.Windows.Forms.GroupBox();
+            this._lblUserAccessMode = new System.Windows.Forms.Label();
             this._gbConnection.SuspendLayout();
             this._gbFilePaths.SuspendLayout();
             this._gbAttach.SuspendLayout();
@@ -195,7 +196,7 @@
             // 
             // _lblVersion
             // 
-            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._lblVersion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._lblVersion.Location = new System.Drawing.Point(380, 15);
@@ -209,9 +210,9 @@
             // 
             this._lbDatabases.FormattingEnabled = true;
             this._lbDatabases.ItemHeight = 15;
-            this._lbDatabases.Location = new System.Drawing.Point(380, 153);
+            this._lbDatabases.Location = new System.Drawing.Point(380, 170);
             this._lbDatabases.Name = "_lbDatabases";
-            this._lbDatabases.Size = new System.Drawing.Size(280, 139);
+            this._lbDatabases.Size = new System.Drawing.Size(280, 124);
             this._lbDatabases.TabIndex = 2;
             this._lbDatabases.SelectedIndexChanged += new System.EventHandler(this._lbDatabases_SelectedIndexChanged);
             // 
@@ -261,8 +262,8 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
             this._rtbLog.Location = new System.Drawing.Point(12, 532);
@@ -460,15 +461,15 @@
             // 
             this._lbFiscalYears.FormattingEnabled = true;
             this._lbFiscalYears.ItemHeight = 15;
-            this._lbFiscalYears.Location = new System.Drawing.Point(670, 153);
+            this._lbFiscalYears.Location = new System.Drawing.Point(670, 170);
             this._lbFiscalYears.Name = "_lbFiscalYears";
-            this._lbFiscalYears.Size = new System.Drawing.Size(302, 139);
+            this._lbFiscalYears.Size = new System.Drawing.Size(302, 124);
             this._lbFiscalYears.TabIndex = 16;
             // 
             // _lblFiscalYears
             // 
             this._lblFiscalYears.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblFiscalYears.Location = new System.Drawing.Point(670, 133);
+            this._lblFiscalYears.Location = new System.Drawing.Point(670, 150);
             this._lblFiscalYears.Name = "_lblFiscalYears";
             this._lblFiscalYears.Size = new System.Drawing.Size(302, 15);
             this._lblFiscalYears.TabIndex = 17;
@@ -515,7 +516,7 @@
             // 
             this._lblDatabases.AutoSize = true;
             this._lblDatabases.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblDatabases.Location = new System.Drawing.Point(380, 133);
+            this._lblDatabases.Location = new System.Drawing.Point(380, 150);
             this._lblDatabases.Name = "_lblDatabases";
             this._lblDatabases.Size = new System.Drawing.Size(63, 15);
             this._lblDatabases.TabIndex = 19;
@@ -554,9 +555,9 @@
             // 
             // _progressBar
             // 
-            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this._progressBar.Location = new System.Drawing.Point(380, 298);
+            this._progressBar.Location = new System.Drawing.Point(380, 300);
             this._progressBar.Name = "_progressBar";
             this._progressBar.Size = new System.Drawing.Size(592, 30);
             this._progressBar.TabIndex = 23;
@@ -578,11 +579,22 @@
             this._gbDbOperations.TabStop = false;
             this._gbDbOperations.Text = "Database Operations";
             // 
+            // _lblUserAccessMode
+            // 
+            this._lblUserAccessMode.AutoSize = true;
+            this._lblUserAccessMode.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this._lblUserAccessMode.Location = new System.Drawing.Point(380, 125);
+            this._lblUserAccessMode.Name = "_lblUserAccessMode";
+            this._lblUserAccessMode.Size = new System.Drawing.Size(108, 15);
+            this._lblUserAccessMode.TabIndex = 25;
+            this._lblUserAccessMode.Text = "Access Mode: N/A";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 611);
+            this.Controls.Add(this._lblUserAccessMode);
             this.Controls.Add(this._gbDbOperations);
             this.Controls.Add(this._progressBar);
             this.Controls.Add(this._lblActivationCode);
@@ -671,5 +683,6 @@
         private System.Windows.Forms.GroupBox _gbDbOperations;
         private System.Windows.Forms.Button _btnSchemaCheck;
         private System.Windows.Forms.Button _btnCheckTriggers;
+        private System.Windows.Forms.Label _lblUserAccessMode;
     }
 }

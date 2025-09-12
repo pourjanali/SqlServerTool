@@ -20,6 +20,7 @@ namespace SqlServerTool
         public DatabaseType DbType { get; set; } = DatabaseType.Unknown;
         public List<string> FiscalYears { get; set; } = new List<string>();
         public string ActivationCode { get; set; } = "N/A";
+        public string UserAccessMode { get; set; } = "N/A";
     }
 
     /// <summary>
@@ -416,6 +417,18 @@ namespace SqlServerTool
                 InitialCatalog = databaseName
             };
 
+            // Get User Access mode first, as it can be done on the master connection
+            try
+            {
+                details.UserAccessMode = await GetUserAccessModeAsync(databaseName);
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"Could not get user access mode for {databaseName}: {ex.Message}");
+                details.UserAccessMode = "Error";
+            }
+
+
             using (var connection = new SqlConnection(builder.ConnectionString))
             {
                 try
@@ -492,6 +505,18 @@ namespace SqlServerTool
                 }
             }
             return details;
+        }
+
+        public async Task<string> GetUserAccessModeAsync(string databaseName)
+        {
+            const string query = "SELECT DATABASEPROPERTYEX(@dbName, 'UserAccess')";
+            using (var connection = await GetOpenConnectionAsync()) // Uses master by default
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@dbName", databaseName);
+                var result = await command.ExecuteScalarAsync();
+                return result?.ToString() ?? "N/A";
+            }
         }
 
         public async Task<(bool IsMatch, string Message)> CheckDatabaseSchemaAsync(string databaseName)
