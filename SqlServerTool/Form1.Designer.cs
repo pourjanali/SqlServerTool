@@ -194,7 +194,7 @@
             // 
             // _lblVersion
             // 
-            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._lblVersion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._lblVersion.Location = new System.Drawing.Point(380, 15);
@@ -250,7 +250,6 @@
             // _btnDetach
             // 
             this._btnDetach.BackColor = System.Drawing.Color.Khaki;
-            this._btnDetach.Enabled = false;
             this._btnDetach.Location = new System.Drawing.Point(238, 58);
             this._btnDetach.Name = "_btnDetach";
             this._btnDetach.Size = new System.Drawing.Size(110, 30);
@@ -261,8 +260,8 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
             this._rtbLog.Location = new System.Drawing.Point(12, 532);
@@ -339,11 +338,9 @@
             this._gbAttach.Controls.Add(this._btnBrowseMdf);
             this._gbAttach.Controls.Add(this._txtAttachMdf);
             this._gbAttach.Controls.Add(this._lblAttachMdf);
-            this._gbAttach.Controls.Add(this._txtAttachDbName);
-            this._gbAttach.Controls.Add(this._lblAttachDbName);
             this._gbAttach.Location = new System.Drawing.Point(12, 436);
             this._gbAttach.Name = "_gbAttach";
-            this._gbAttach.Size = new System.Drawing.Size(960, 59);
+            this._gbAttach.Size = new System.Drawing.Size(960, 90);
             this._gbAttach.TabIndex = 6;
             this._gbAttach.TabStop = false;
             this._gbAttach.Text = "Attach Database";
@@ -351,10 +348,9 @@
             // _btnAttach
             // 
             this._btnAttach.BackColor = System.Drawing.Color.LightGreen;
-            this._btnAttach.Enabled = false;
-            this._btnAttach.Location = new System.Drawing.Point(840, 17);
+            this._btnAttach.Location = new System.Drawing.Point(840, 21);
             this._btnAttach.Name = "_btnAttach";
-            this._btnAttach.Size = new System.Drawing.Size(110, 30);
+            this._btnAttach.Size = new System.Drawing.Size(110, 56);
             this._btnAttach.TabIndex = 8;
             this._btnAttach.Text = "Attach Database";
             this._btnAttach.UseVisualStyleBackColor = false;
@@ -362,26 +358,25 @@
             // 
             // _btnBrowseLdf
             // 
-            this._btnBrowseLdf.Location = new System.Drawing.Point(800, 48);
+            this._btnBrowseLdf.Location = new System.Drawing.Point(800, 51);
             this._btnBrowseLdf.Name = "_btnBrowseLdf";
             this._btnBrowseLdf.Size = new System.Drawing.Size(30, 25);
             this._btnBrowseLdf.TabIndex = 7;
             this._btnBrowseLdf.Text = "...";
             this._btnBrowseLdf.UseVisualStyleBackColor = true;
-            this._btnBrowseLdf.Visible = false;
             this._btnBrowseLdf.Click += new System.EventHandler(this._btnBrowseLdf_Click);
             // 
             // _txtAttachLdf
             // 
-            this._txtAttachLdf.Location = new System.Drawing.Point(461, 22);
+            this._txtAttachLdf.Location = new System.Drawing.Point(82, 52);
             this._txtAttachLdf.Name = "_txtAttachLdf";
-            this._txtAttachLdf.Size = new System.Drawing.Size(329, 23);
+            this._txtAttachLdf.Size = new System.Drawing.Size(712, 23);
             this._txtAttachLdf.TabIndex = 6;
             // 
             // _lblAttachLdf
             // 
             this._lblAttachLdf.AutoSize = true;
-            this._lblAttachLdf.Location = new System.Drawing.Point(404, 25);
+            this._lblAttachLdf.Location = new System.Drawing.Point(15, 55);
             this._lblAttachLdf.Name = "_lblAttachLdf";
             this._lblAttachLdf.Size = new System.Drawing.Size(51, 15);
             this._lblAttachLdf.TabIndex = 5;
@@ -389,8 +384,7 @@
             // 
             // _btnBrowseMdf
             // 
-            this._btnBrowseMdf.Enabled = false;
-            this._btnBrowseMdf.Location = new System.Drawing.Point(800, 17);
+            this._btnBrowseMdf.Location = new System.Drawing.Point(800, 21);
             this._btnBrowseMdf.Name = "_btnBrowseMdf";
             this._btnBrowseMdf.Size = new System.Drawing.Size(30, 25);
             this._btnBrowseMdf.TabIndex = 4;
@@ -402,7 +396,7 @@
             // 
             this._txtAttachMdf.Location = new System.Drawing.Point(82, 22);
             this._txtAttachMdf.Name = "_txtAttachMdf";
-            this._txtAttachMdf.Size = new System.Drawing.Size(316, 23);
+            this._txtAttachMdf.Size = new System.Drawing.Size(712, 23);
             this._txtAttachMdf.TabIndex = 3;
             // 
             // _lblAttachMdf
@@ -547,7 +541,7 @@
             // 
             // _progressBar
             // 
-            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._progressBar.Location = new System.Drawing.Point(12, 501);
             this._progressBar.Name = "_progressBar";

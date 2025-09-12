@@ -88,10 +88,8 @@ namespace SqlServerTool
             ToggleOperationControls(isConnected);
         }
 
-        // #6: Fix Connect/Disconnect button usability
         private void SetConnectedState()
         {
-            // Instead of disabling the whole groupbox, disable individual controls
             _txtServer.Enabled = false;
             _btnBrowseServers.Enabled = false;
             _rbWindowsAuth.Enabled = false;
@@ -100,20 +98,18 @@ namespace SqlServerTool
             _txtPassword.Enabled = false;
             _btnConnect.Enabled = false;
 
-            _btnDisconnect.Enabled = true; // This button will now be usable
+            _btnDisconnect.Enabled = true;
             ToggleOperationControls(true);
         }
 
-        // #6: Fix Connect/Disconnect button usability
         private void SetDisconnectedState()
         {
             _sqlManager = null;
-            // Explicitly enable connection controls
             _txtServer.Enabled = true;
             _btnBrowseServers.Enabled = true;
             _rbWindowsAuth.Enabled = true;
             _rbSqlAuth.Enabled = true;
-            UpdateAuthControls(); // This correctly handles enabling/disabling user/pass fields based on auth type
+            UpdateAuthControls();
             _btnConnect.Enabled = true;
 
             _btnDisconnect.Enabled = false;
@@ -161,7 +157,7 @@ namespace SqlServerTool
                 _toolTip.SetToolTip(_lblVersion, version);
                 Log("Connection successful.");
 
-                SetConnectedState(); // Set state before refreshing list
+                SetConnectedState();
                 await RefreshDatabaseList();
             }
             catch (Exception ex)
@@ -182,7 +178,6 @@ namespace SqlServerTool
             SetDisconnectedState();
         }
 
-        // #15: Add button to browse for SQL servers
         private async void _btnBrowseServers_Click(object sender, EventArgs e)
         {
             Log("Searching for local and network SQL Server instances...");
@@ -214,7 +209,6 @@ namespace SqlServerTool
                     }
                 }
 
-                // Use a simple selection form
                 using (var selectionForm = new Form())
                 {
                     selectionForm.Text = "Select SQL Server Instance";
@@ -388,7 +382,6 @@ namespace SqlServerTool
             }
         }
 
-        // #18: Schema Check button handler
         private async void _btnSchemaCheck_Click(object sender, EventArgs e)
         {
             if (_lbDatabases.SelectedItem == null)
@@ -402,7 +395,7 @@ namespace SqlServerTool
             try
             {
                 var (isMatch, message) = await _sqlManager.CheckDatabaseSchemaAsync(dbInfo.Name);
-                Log(message.Replace(Environment.NewLine, " ")); // Log as a single line
+                Log(message.Replace(Environment.NewLine, " "));
 
                 if (isMatch)
                 {
@@ -593,8 +586,9 @@ namespace SqlServerTool
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     _txtAttachMdf.Text = ofd.FileName;
-                    _txtAttachLdf.Text = Path.ChangeExtension(ofd.FileName, "_log.ldf");
-                    _txtAttachDbName.Text = Path.GetFileNameWithoutExtension(ofd.FileName);
+                    // Automatically suggest the LDF file path, but the user can change it.
+                    // The backend logic will handle if it doesn't exist.
+                    _txtAttachLdf.Text = Path.ChangeExtension(ofd.FileName, ".ldf").Replace(".mdf", "_log.ldf");
                 }
             }
         }
@@ -613,15 +607,16 @@ namespace SqlServerTool
 
         private async void _btnAttach_Click(object sender, EventArgs e)
         {
-            string dbName = Path.GetFileNameWithoutExtension(_txtAttachMdf.Text);
             string mdfPath = _txtAttachMdf.Text;
             string ldfPath = _txtAttachLdf.Text;
 
-            if (string.IsNullOrWhiteSpace(mdfPath) || string.IsNullOrWhiteSpace(ldfPath))
+            if (string.IsNullOrWhiteSpace(mdfPath))
             {
-                MessageBox.Show("Please provide an MDF path and LDF path.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please provide the path to the MDF file.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            string dbName = Path.GetFileNameWithoutExtension(mdfPath);
 
             ShowProgress($"Attaching database {dbName}...");
             try
@@ -630,7 +625,6 @@ namespace SqlServerTool
                 Log("Database attached successfully.");
                 MessageBox.Show("Database attached successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 await RefreshDatabaseList();
-                _txtAttachDbName.Clear();
                 _txtAttachMdf.Clear();
                 _txtAttachLdf.Clear();
             }

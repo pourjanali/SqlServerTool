@@ -118,7 +118,6 @@ namespace SqlServerTool
 
                 // If the command was a RESTORE or a successful DETACH, try to set it back to MULTI_USER
                 bool wasRestore = commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase);
-                bool wasDetach = commandText.IndexOf("sp_detach_db", StringComparison.OrdinalIgnoreCase) >= 0;
 
                 if (wasRestore)
                 {
@@ -244,7 +243,20 @@ namespace SqlServerTool
 
         public async Task<bool> AttachDatabaseAsync(string dbName, string mdfPath, string ldfPath)
         {
-            string commandText = $"CREATE DATABASE [{dbName}] ON (FILENAME = N'{mdfPath}'), (FILENAME = N'{ldfPath}') FOR ATTACH";
+            string commandText;
+            // If the LDF path is provided and the file actually exists, we use it.
+            if (!string.IsNullOrWhiteSpace(ldfPath) && File.Exists(ldfPath))
+            {
+                commandText = $"CREATE DATABASE [{dbName}] ON (FILENAME = N'{mdfPath}'), (FILENAME = N'{ldfPath}') FOR ATTACH";
+            }
+            else
+            {
+                // If the LDF path is missing, or the file doesn't exist at that path,
+                // instruct SQL Server to attach the MDF and build a new log file.
+                // This is the standard way to recover from a missing or corrupt log file.
+                commandText = $"CREATE DATABASE [{dbName}] ON (FILENAME = N'{mdfPath}') FOR ATTACH_REBUILD_LOG";
+            }
+
             await ExecuteNonQueryAsync(commandText, dbName, useMaster: true);
             return true;
         }
@@ -284,9 +296,42 @@ namespace SqlServerTool
 
         public async Task<bool> DetachDatabaseAsync(string databaseName)
         {
-            // Now handled by ExecuteNonQueryAsync for consistency and robust single-user mode handling
-            string commandText = $"EXEC sp_detach_db '{databaseName}', 'true'";
-            await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true);
+            var masterBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
+
+            using (var connection = new SqlConnection(masterBuilder.ConnectionString))
+            {
+                await connection.OpenAsync();
+                try
+                {
+                    string killConnectionsSql = $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE";
+                    using (var command = new SqlCommand(killConnectionsSql, connection))
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+
+                    string detachSql = $"EXEC sp_detach_db '{databaseName}', 'true'";
+                    using (var command = new SqlCommand(detachSql, connection))
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        string setMultiUserSql = $"ALTER DATABASE [{databaseName}] SET MULTI_USER";
+                        using (var command = new SqlCommand(setMultiUserSql, connection))
+                        {
+                            await command.ExecuteNonQueryAsync();
+                        }
+                    }
+                    catch (Exception multiUserEx)
+                    {
+                        Console.WriteLine($"Failed to set database back to MULTI_USER mode: {multiUserEx.Message}");
+                    }
+                    throw;
+                }
+            }
             return true;
         }
 
@@ -437,7 +482,6 @@ namespace SqlServerTool
             return details;
         }
 
-        // #18: New method for checking database schema
         public async Task<(bool IsMatch, string Message)> CheckDatabaseSchemaAsync(string databaseName)
         {
             var details = await GetDatabaseDetailsAsync(databaseName);
@@ -473,7 +517,6 @@ namespace SqlServerTool
                 }
             }
 
-            // MODIFIED: Only ignore core system schemas. dbo, guest, etc., will now be flagged.
             actualSchemas.Remove("INFORMATION_SCHEMA");
             actualSchemas.Remove("sys");
 
