@@ -37,6 +37,18 @@ namespace SqlServerTool
 
             UpdateAuthControls();
             SetDisconnectedState();
+
+            // This line registers the event handler for when the form loads.
+            this.Load += new System.EventHandler(this.Form1_Load);
+        }
+
+        /// <summary>
+        /// This event handler is called when the form is loading, right before it is displayed.
+        /// </summary>
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // This command brings the form to the front and gives it focus.
+            this.Activate();
         }
 
         private void Log(string message)
@@ -715,3 +727,4 @@ namespace SqlServerTool
         }
     }
 }
+

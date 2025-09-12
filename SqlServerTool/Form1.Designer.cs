@@ -615,6 +615,9 @@
             this.Controls.Add(this._btnDisconnect);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            // Set the Icon for the main form from the project's resources.
+            // Ensure you have added your ICO and named it 'AppIcon' in the resource editor.
+            this.Icon = global::SqlServerTool.Properties.Resources.AppIcon;
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
