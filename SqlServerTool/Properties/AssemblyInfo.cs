@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SQL Server Utility")]
 [assembly: AssemblyDescription("A simple utility for managing SQL Server databases.\r\nContact: pourjanali.1998@gmail.com")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("HNAM Co")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SQL Server Utility")]
 [assembly: AssemblyCopyright("Copyright © 2025")]
 [assembly: AssemblyTrademark("")]
