@@ -80,6 +80,10 @@ namespace SqlServerTool
             _gbDbOperations.Enabled = isEnabled;
             _gbAttach.Enabled = isEnabled;
             _lbDatabases.Enabled = isEnabled;
+            _gbDbInfo.Enabled = isEnabled;
+            _gbServerInfo.Enabled = isEnabled;
+            _gbFilePaths.Enabled = isEnabled;
+            _lbFiscalYears.Enabled = isEnabled;
         }
 
         private void ShowProgress(string initialMessage)
@@ -89,6 +93,7 @@ namespace SqlServerTool
             _progressBar.Visible = true;
             this.Cursor = Cursors.WaitCursor;
             ToggleOperationControls(false);
+            _gbConnection.Enabled = false;
         }
 
         private void HideProgress()
@@ -98,6 +103,10 @@ namespace SqlServerTool
             this.Cursor = Cursors.Default;
             var isConnected = _sqlManager != null;
             ToggleOperationControls(isConnected);
+            if (!isConnected)
+            {
+                _gbConnection.Enabled = true;
+            }
         }
 
         private void SetConnectedState()
@@ -109,6 +118,7 @@ namespace SqlServerTool
             _txtUser.Enabled = false;
             _txtPassword.Enabled = false;
             _btnConnect.Enabled = false;
+            _btnAbout.Enabled = false;
 
             _btnDisconnect.Enabled = true;
             ToggleOperationControls(true);
@@ -123,6 +133,7 @@ namespace SqlServerTool
             _rbSqlAuth.Enabled = true;
             UpdateAuthControls();
             _btnConnect.Enabled = true;
+            _btnAbout.Enabled = true;
 
             _btnDisconnect.Enabled = false;
 
@@ -132,12 +143,20 @@ namespace SqlServerTool
             _txtLdfPath.Clear();
             _lblVersion.Text = "Version: N/A";
             _toolTip.SetToolTip(_lblVersion, "");
-            _lblDbVersion.Text = "DataVersion: N/A";
+            _lblDbVersion.Text = "Data Version: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
-            _lblActivationCode.Text = "ActivationCode: N/A";
+            _lblActivationCode.Text = "Activation Code: N/A";
             _lblUserAccessMode.Text = "Access Mode: N/A";
             _lblUserAccessMode.ForeColor = SystemColors.ControlText;
+
+            // Clear new labels
+            _lblServerName.Text = "Server Name: N/A";
+            _lblServiceName.Text = "Service Name: N/A";
+            _lblConnections.Text = "Connections: N/A";
+            _lblTranCount.Text = "Tran Count: N/A";
+            _lblLanguage.Text = "Language: N/A";
+            _lblCollation.Text = "Collation: N/A";
 
 
             ToggleOperationControls(false);
@@ -168,7 +187,7 @@ namespace SqlServerTool
 
                 string version = await _sqlManager.GetSqlServerVersionAsync();
                 _sqlShortVersion = await _sqlManager.GetSqlShortVersionAsync();
-                _lblVersion.Text = $"Version: {version}";
+                _lblVersion.Text = $"{version}";
                 _toolTip.SetToolTip(_lblVersion, version);
                 Log("Connection successful.");
 
@@ -268,12 +287,21 @@ namespace SqlServerTool
             _lbFiscalYears.DataSource = null;
             _txtMdfPath.Clear();
             _txtLdfPath.Clear();
-            _lblDbVersion.Text = "DataVersion: N/A";
+            _lblDbVersion.Text = "Data Version: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
-            _lblActivationCode.Text = "ActivationCode: N/A";
+            _lblActivationCode.Text = "Activation Code: N/A";
             _lblUserAccessMode.Text = "Access Mode: N/A";
             _lblUserAccessMode.ForeColor = SystemColors.ControlText;
+
+            // Clear new labels
+            _lblServerName.Text = "Server Name: N/A";
+            _lblServiceName.Text = "Service Name: N/A";
+            _lblConnections.Text = "Connections: N/A";
+            _lblTranCount.Text = "Tran Count: N/A";
+            _lblLanguage.Text = "Language: N/A";
+            _lblCollation.Text = "Collation: N/A";
+
             _databases = await _sqlManager.GetDatabasesAndFilesAsync();
             _lbDatabases.DataSource = _databases;
             _lbDatabases.DisplayMember = "Name";
@@ -338,9 +366,13 @@ namespace SqlServerTool
             }
 
             var dbInfo = (DatabaseInfo)_lbDatabases.SelectedItem;
-            var result = MessageBox.Show($"Are you sure you want to permanently delete the database '{dbInfo.Name}'?\n\nTHIS ACTION CANNOT BE UNDONE.", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
-            if (result == DialogResult.Yes)
+            // --- NEW CONFIRMATION LOGIC ---
+            string prompt = $"This will permanently delete the database '{dbInfo.Name}'. This action cannot be undone.\n\nPlease type 'Delete' into the box below to confirm.";
+            string title = "Confirm Delete";
+            string confirmation = Interaction.InputBox(prompt, title);
+
+            if (confirmation == "Delete")
             {
                 ShowProgress($"Deleting database {dbInfo.Name}...");
                 try
@@ -357,6 +389,17 @@ namespace SqlServerTool
                 finally
                 {
                     HideProgress();
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(confirmation)) // Only log if user typed something incorrect
+                {
+                    Log($"Incorrect confirmation text entered. Database '{dbInfo.Name}' was not deleted.");
+                }
+                else // User pressed Cancel or closed the box
+                {
+                    Log("Database deletion cancelled by user.");
                 }
             }
         }
@@ -478,9 +521,13 @@ namespace SqlServerTool
             }
 
             var dbInfo = (DatabaseInfo)_lbDatabases.SelectedItem;
-            var result = MessageBox.Show($"Are you sure you want to detach the database '{dbInfo.Name}'?\nThe database files will NOT be deleted.", "Confirm Detach", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            // --- NEW CONFIRMATION LOGIC ---
+            string prompt = $"This will detach the database '{dbInfo.Name}'. The database files will not be deleted.\n\nPlease type 'Detach' into the box below to confirm.";
+            string title = "Confirm Detach";
+            string confirmation = Interaction.InputBox(prompt, title);
+
+            if (confirmation == "Detach")
             {
                 ShowProgress($"Detaching database {dbInfo.Name}...");
                 try
@@ -497,6 +544,17 @@ namespace SqlServerTool
                 finally
                 {
                     HideProgress();
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(confirmation)) // Only log if user typed something incorrect
+                {
+                    Log($"Incorrect confirmation text entered. Database '{dbInfo.Name}' was not detached.");
+                }
+                else // User pressed Cancel or closed the box
+                {
+                    Log("Database detach cancelled by user.");
                 }
             }
         }
@@ -571,22 +629,40 @@ namespace SqlServerTool
                 _txtMdfPath.Text = dbInfo.MdfPath;
                 _txtLdfPath.Text = dbInfo.LdfPath;
 
-                _lblDbVersion.Text = "DataVersion: Loading...";
+                _lblDbVersion.Text = "Data Version: Loading...";
                 _lblCompanyName.Text = "Company: Loading...";
                 _lblDbType.Text = "Type: Loading...";
-                _lblActivationCode.Text = "ActivationCode: Loading...";
+                _lblActivationCode.Text = "Activation Code: Loading...";
                 _lblUserAccessMode.Text = "Access Mode: Loading...";
                 _lblUserAccessMode.ForeColor = SystemColors.ControlText;
+
+                // Set new labels to loading state
+                _lblServerName.Text = "Server Name: Loading...";
+                _lblServiceName.Text = "Service Name: Loading...";
+                _lblConnections.Text = "Connections: Loading...";
+                _lblTranCount.Text = "Tran Count: Loading...";
+                _lblLanguage.Text = "Language: Loading...";
+                _lblCollation.Text = "Collation: Loading...";
+
                 _lbFiscalYears.DataSource = null;
 
                 try
                 {
                     var details = await _sqlManager.GetDatabaseDetailsAsync(dbInfo.Name);
-                    _lblDbVersion.Text = $"DataVersion: {details.DataVersion}";
+                    _lblDbVersion.Text = $"Data Version: {details.DataVersion}";
                     _lblCompanyName.Text = $"Company: {details.CompanyName}";
                     _lblDbType.Text = $"Type: {details.DbType}";
-                    _lblActivationCode.Text = $"ActivationCode: {details.ActivationCode}";
+                    _lblActivationCode.Text = $"Activation Code: {details.ActivationCode}";
                     _lblUserAccessMode.Text = $"Access Mode: {details.UserAccessMode}";
+
+                    // Update new labels with retrieved data
+                    _lblServerName.Text = $"Server Name: {details.ServerName}";
+                    _lblServiceName.Text = $"Service Name: {details.ServiceName}";
+                    _lblConnections.Text = $"Connections: {details.Connections}";
+                    _lblTranCount.Text = $"Tran Count: {details.TranCount}";
+                    _lblLanguage.Text = $"Language: {details.Language}";
+                    _lblCollation.Text = $"Collation: {details.Collation}";
+
 
                     switch (details.UserAccessMode.ToUpper())
                     {
@@ -609,24 +685,41 @@ namespace SqlServerTool
                 catch (Exception ex)
                 {
                     Log($"ERROR: Could not get database details for {dbInfo.Name}. {ex.Message}");
-                    _lblDbVersion.Text = "DataVersion: Error";
+                    _lblDbVersion.Text = "Data Version: Error";
                     _lblCompanyName.Text = "Company: Error";
                     _lblDbType.Text = "Type: Error";
-                    _lblActivationCode.Text = "ActivationCode: Error";
+                    _lblActivationCode.Text = "Activation Code: Error";
                     _lblUserAccessMode.Text = "Access Mode: Error";
                     _lblUserAccessMode.ForeColor = Color.Red;
+
+                    // Set new labels to error state
+                    _lblServerName.Text = "Server Name: Error";
+                    _lblServiceName.Text = "Service Name: Error";
+                    _lblConnections.Text = "Connections: Error";
+                    _lblTranCount.Text = "Tran Count: Error";
+                    _lblLanguage.Text = "Language: Error";
+                    _lblCollation.Text = "Collation: Error";
                 }
             }
             else
             {
                 _txtMdfPath.Clear();
                 _txtLdfPath.Clear();
-                _lblDbVersion.Text = "DataVersion: N/A";
+                _lblDbVersion.Text = "Data Version: N/A";
                 _lblCompanyName.Text = "Company: N/A";
                 _lblDbType.Text = "Type: N/A";
-                _lblActivationCode.Text = "ActivationCode: N/A";
+                _lblActivationCode.Text = "Activation Code: N/A";
                 _lblUserAccessMode.Text = "Access Mode: N/A";
                 _lblUserAccessMode.ForeColor = SystemColors.ControlText;
+
+                // Clear new labels
+                _lblServerName.Text = "Server Name: N/A";
+                _lblServiceName.Text = "Service Name: N/A";
+                _lblConnections.Text = "Connections: N/A";
+                _lblTranCount.Text = "Tran Count: N/A";
+                _lblLanguage.Text = "Language: N/A";
+                _lblCollation.Text = "Collation: N/A";
+
                 _lbFiscalYears.DataSource = null;
             }
         }

@@ -21,6 +21,13 @@ namespace SqlServerTool
         public List<string> FiscalYears { get; set; } = new List<string>();
         public string ActivationCode { get; set; } = "N/A";
         public string UserAccessMode { get; set; } = "N/A";
+        // --- NEW PROPERTIES ---
+        public string TranCount { get; set; } = "N/A";
+        public string Connections { get; set; } = "N/A";
+        public string ServerName { get; set; } = "N/A";
+        public string ServiceName { get; set; } = "N/A";
+        public string Language { get; set; } = "N/A";
+        public string Collation { get; set; } = "N/A";
     }
 
     /// <summary>
@@ -93,9 +100,7 @@ namespace SqlServerTool
 
                 // This block handles setting SINGLE_USER and MULTI_USER modes
                 // for operations like DROP, DETACH, and RESTORE
-                bool needsSingleUserMode = commandText.Trim().StartsWith("DROP", StringComparison.OrdinalIgnoreCase) ||
-                                           commandText.IndexOf("sp_detach_db", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                           (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase));
+                bool needsSingleUserMode = (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase));
 
                 if (needsSingleUserMode)
                 {
@@ -249,8 +254,48 @@ namespace SqlServerTool
 
         public async Task<bool> DeleteDatabaseAsync(string databaseName)
         {
-            string commandText = $"DROP DATABASE [{databaseName}]";
-            await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true);
+            // Expert fix: To ensure a successful drop, we connect directly to the master database,
+            // forcefully set the target database to single-user mode (which kicks out all other connections),
+            // and then issue the drop command, all on the same connection.
+            var masterConnectionStringBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
+
+            using (var connection = new SqlConnection(masterConnectionStringBuilder.ConnectionString))
+            {
+                await connection.OpenAsync();
+
+                // 1. Force the database into single-user mode.
+                // This will disconnect all other users and roll back their transactions.
+                string setSingleUserCmdText = $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE";
+                using (var command = new SqlCommand(setSingleUserCmdText, connection))
+                {
+                    try
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (SqlException ex)
+                    {
+                        // This might fail if the DB is already gone or in a weird state.
+                        // We log it as a warning but proceed, as the DROP command is the real test.
+                        Console.WriteLine($"Warning: Could not set database {databaseName} to SINGLE_USER. Error: {ex.Message}");
+                    }
+                }
+
+                // 2. Drop the database.
+                string dropCmdText = $"DROP DATABASE [{databaseName}]";
+                using (var command = new SqlCommand(dropCmdText, connection))
+                {
+                    await command.ExecuteNonQueryAsync(); // This is the command that must succeed.
+                }
+            }
+
+            // After dropping, it's good practice to clear the connection pool associated with the
+            // now-deleted database to prevent the application from trying to use a cached connection.
+            var dbConnectionStringBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = databaseName };
+            using (var connToClear = new SqlConnection(dbConnectionStringBuilder.ConnectionString))
+            {
+                SqlConnection.ClearPool(connToClear);
+            }
+
             return true;
         }
 
@@ -434,6 +479,33 @@ namespace SqlServerTool
                 try
                 {
                     await connection.OpenAsync();
+
+                    // --- NEW: Query for server and database properties ---
+                    string serverInfoQuery = @"
+                        SELECT 
+                            @@TRANCOUNT AS TranCount,
+                            (SELECT COUNT(*) FROM sys.dm_exec_connections) AS Connections,
+                            @@SERVERNAME AS ServerName,
+                            @@SERVICENAME AS ServiceName,
+                            @@LANGUAGE AS Language,
+                            DATABASEPROPERTYEX(@dbName, 'Collation') AS Collation;";
+                    using (var serverInfoCmd = new SqlCommand(serverInfoQuery, connection))
+                    {
+                        serverInfoCmd.Parameters.AddWithValue("@dbName", databaseName);
+                        using (var reader = await serverInfoCmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                details.TranCount = reader["TranCount"].ToString();
+                                details.Connections = reader["Connections"].ToString();
+                                details.ServerName = reader["ServerName"].ToString();
+                                details.ServiceName = reader["ServiceName"].ToString();
+                                details.Language = reader["Language"].ToString();
+                                details.Collation = reader["Collation"].ToString();
+                            }
+                        }
+                    }
+
 
                     string versionQuery = "SELECT TOP 1 CAST(Major AS VARCHAR) + '.' + CAST(Minor AS VARCHAR) + '.' + CAST(Build AS VARCHAR) AS Result FROM fmk.Version ORDER BY VersionID DESC;";
                     using (var versionCmd = new SqlCommand(versionQuery, connection))
@@ -674,3 +746,4 @@ namespace SqlServerTool
         }
     }
 }
+
