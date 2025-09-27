@@ -1,18 +1,17 @@
 ﻿using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SqlServerTool
 {
     public enum DatabaseType { Unknown, Sepidar, Dasht }
 
-    /// <summary>
-    /// A container for all retrieved details about a specific database.
-    /// </summary>
     public class DbDetails
     {
         public string DataVersion { get; set; } = "N/A";
@@ -21,7 +20,6 @@ namespace SqlServerTool
         public List<string> FiscalYears { get; set; } = new List<string>();
         public string ActivationCode { get; set; } = "N/A";
         public string UserAccessMode { get; set; } = "N/A";
-        // --- NEW PROPERTIES ---
         public string TranCount { get; set; } = "N/A";
         public string Connections { get; set; } = "N/A";
         public string ServerName { get; set; } = "N/A";
@@ -30,9 +28,6 @@ namespace SqlServerTool
         public string Collation { get; set; } = "N/A";
     }
 
-    /// <summary>
-    /// Represents details of a single SQL trigger.
-    /// </summary>
     public class TriggerInfo
     {
         public string Name { get; set; }
@@ -43,10 +38,6 @@ namespace SqlServerTool
     }
 
 
-    /// <summary>
-    /// Core class for interacting with a SQL Server instance.
-    /// Handles all database operations.
-    /// </summary>
     public class SqlManager
     {
         private readonly string _connectionString;
@@ -74,7 +65,6 @@ namespace SqlServerTool
             }
             else
             {
-                // If not using master, use the specified database context
                 builder.InitialCatalog = dbName;
             }
 
@@ -98,18 +88,14 @@ namespace SqlServerTool
 
                 await connection.OpenAsync();
 
-                // This block handles setting SINGLE_USER and MULTI_USER modes
-                // for operations like DROP, DETACH, and RESTORE
                 bool needsSingleUserMode = (commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase));
 
                 if (needsSingleUserMode)
                 {
-                    // For drop/detach/restore, we need to be in master context to kick other users off
                     var masterBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
                     using (var masterConnection = new SqlConnection(masterBuilder.ConnectionString))
                     {
                         await masterConnection.OpenAsync();
-                        // Attempt to set to SINGLE_USER. Use a try-catch to ensure we always try to revert.
                         try
                         {
                             using (var singleUserCmd = new SqlCommand($"ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE", masterConnection))
@@ -119,10 +105,6 @@ namespace SqlServerTool
                         }
                         catch (SqlException ex)
                         {
-                            // Log or handle if setting to single user fails (e.g., db doesn't exist)
-                            // For detach/drop, it might mean the db is already gone.
-                            // For restore, it might fail if db doesn't exist for REPLACE.
-                            // We'll let the main command try and fail if this was fatal.
                             Console.WriteLine($"Warning: Could not set database {dbName} to SINGLE_USER: {ex.Message}");
                         }
                     }
@@ -130,11 +112,10 @@ namespace SqlServerTool
 
                 using (var command = new SqlCommand(commandText, connection))
                 {
-                    command.CommandTimeout = 600; // 10 minutes for long operations
+                    command.CommandTimeout = 600;
                     await command.ExecuteNonQueryAsync();
                 }
 
-                // If the command was a RESTORE or a successful DETACH, try to set it back to MULTI_USER
                 bool wasRestore = commandText.Trim().StartsWith("RESTORE", StringComparison.OrdinalIgnoreCase) && !commandText.Trim().StartsWith("RESTORE VERIFYONLY", StringComparison.OrdinalIgnoreCase);
 
                 if (wasRestore)
@@ -156,38 +137,81 @@ namespace SqlServerTool
                         }
                     }
                 }
-                // For detach, we don't set it back to MULTI_USER because the database is no longer attached.
             }
         }
 
-        /// <summary>
-        /// Gets the full SQL Server version string, including the Edition.
-        /// </summary>
-        /// <returns>A formatted string with the server edition and version number.</returns>
-        public async Task<string> GetSqlServerVersionAsync()
+        // #FIX: This method is now compatible with older SQL Server versions (e.g., 2008).
+        public async Task<(string sqlVersion, long totalMemoryMb, int cpuCount)> GetServerSystemInfoAsync()
         {
-            string edition = "N/A";
             string version = "N/A";
-
-            const string query = "SELECT SERVERPROPERTY('Edition'), @@VERSION";
+            long memory = 0;
+            int cpus = 0;
 
             using (var connection = await GetOpenConnectionAsync())
-            using (var command = new SqlCommand(query, connection))
-            using (var reader = await command.ExecuteReaderAsync())
             {
-                if (await reader.ReadAsync())
+                // First, get the version string to decide which query to use.
+                using (var command = new SqlCommand("SELECT @@VERSION", connection))
                 {
-                    edition = reader.GetString(0);
-                    version = reader.GetString(1).Split('\n')[0].Trim();
+                    var fullVersionString = (await command.ExecuteScalarAsync()) as string ?? "";
+                    version = fullVersionString;
+                }
+
+                // Check if the server is SQL 2008 R2 or older.
+                bool isLegacySql = version.Contains("2008") || version.Contains("2005") || version.Contains("2000");
+
+                if (isLegacySql)
+                {
+                    // Legacy method for older SQL Server versions
+                    const string legacyQuery = @"
+                        EXEC sp_readerrorlog 0, 1, 'detected';
+                        SELECT cpu_count FROM sys.dm_os_sys_info;";
+                    using (var command = new SqlCommand(legacyQuery, connection))
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        // Read RAM from error log
+                        while (await reader.ReadAsync())
+                        {
+                            string logText = reader.GetString(2);
+                            if (logText.Contains("detected") && logText.Contains("MB of RAM"))
+                            {
+                                var match = Regex.Match(logText, @"(\d+)\s*MB of RAM");
+                                if (match.Success && long.TryParse(match.Groups[1].Value, out long ramMb))
+                                {
+                                    memory = ramMb;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Read CPU count from the second result set
+                        if (await reader.NextResultAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                cpus = reader.GetInt32(0);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Modern method for SQL Server 2012 and newer
+                    const string modernQuery = "SELECT cpu_count, physical_memory_kb FROM sys.dm_os_sys_info;";
+                    using (var command = new SqlCommand(modernQuery, connection))
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            cpus = reader.GetInt32(0);
+                            memory = reader.GetInt64(1) / 1024; // Convert KB to MB
+                        }
+                    }
                 }
             }
-            return $"{edition} - {version}";
+            return (version, memory, cpus);
         }
 
-        /// <summary>
-        /// Gets a simplified SQL Server version string for filenames.
-        /// </summary>
-        /// <returns>A short string like "SQL2019".</returns>
+
         public async Task<string> GetSqlShortVersionAsync()
         {
             const string query = "SELECT @@VERSION";
@@ -208,7 +232,39 @@ namespace SqlServerTool
             if (versionString.Contains("2008")) return "SQL2008";
             if (versionString.Contains("2005")) return "SQL2005";
 
-            return "SQL"; // Default fallback
+            return "SQL";
+        }
+
+        public async Task<string> GetDefaultDataPathAsync()
+        {
+            try
+            {
+                const string query = "SELECT SERVERPROPERTY('InstanceDefaultDataPath');";
+                using (var connection = await GetOpenConnectionAsync())
+                using (var command = new SqlCommand(query, connection))
+                {
+                    var result = await command.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value && !string.IsNullOrEmpty(result.ToString()))
+                    {
+                        return result.ToString();
+                    }
+
+                    const string dataPathQuery = "SELECT physical_name FROM sys.master_files WHERE database_id = 1 AND file_id = 1;";
+                    using (var dataPathCommand = new SqlCommand(dataPathQuery, connection))
+                    {
+                        var masterDbPath = await dataPathCommand.ExecuteScalarAsync() as string;
+                        if (!string.IsNullOrEmpty(masterDbPath))
+                        {
+                            return Path.GetDirectoryName(masterDbPath);
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return null;
         }
 
         public async Task<List<DatabaseInfo>> GetDatabasesAndFilesAsync()
@@ -238,15 +294,15 @@ namespace SqlServerTool
 
         public async Task<bool> BackupDatabaseAsync(string databaseName, string backupFilePath, bool verify, IProgress<int> progress = null)
         {
-            progress?.Report(5); // Initial progress
+            progress?.Report(5);
             string commandText = $"BACKUP DATABASE [{databaseName}] TO DISK = N'{backupFilePath}' WITH CHECKSUM, NOFORMAT, INIT, NAME = N'{databaseName}-Full Database Backup', SKIP, NOREWIND, NOUNLOAD, STATS = 10";
             await ExecuteNonQueryAsync(commandText, databaseName, useMaster: true, progress);
 
             if (verify)
             {
-                progress?.Report(95); // Progress before starting verification
+                progress?.Report(95);
                 string verifyCommand = $"RESTORE VERIFYONLY FROM DISK = N'{backupFilePath}' WITH CHECKSUM";
-                await ExecuteNonQueryAsync(verifyCommand, databaseName, useMaster: true, null); // Verify doesn't report granular progress
+                await ExecuteNonQueryAsync(verifyCommand, databaseName, useMaster: true, null);
             }
             progress?.Report(100);
             return true;
@@ -254,17 +310,12 @@ namespace SqlServerTool
 
         public async Task<bool> DeleteDatabaseAsync(string databaseName)
         {
-            // Expert fix: To ensure a successful drop, we connect directly to the master database,
-            // forcefully set the target database to single-user mode (which kicks out all other connections),
-            // and then issue the drop command, all on the same connection.
             var masterConnectionStringBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" };
 
             using (var connection = new SqlConnection(masterConnectionStringBuilder.ConnectionString))
             {
                 await connection.OpenAsync();
 
-                // 1. Force the database into single-user mode.
-                // This will disconnect all other users and roll back their transactions.
                 string setSingleUserCmdText = $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE";
                 using (var command = new SqlCommand(setSingleUserCmdText, connection))
                 {
@@ -274,22 +325,17 @@ namespace SqlServerTool
                     }
                     catch (SqlException ex)
                     {
-                        // This might fail if the DB is already gone or in a weird state.
-                        // We log it as a warning but proceed, as the DROP command is the real test.
                         Console.WriteLine($"Warning: Could not set database {databaseName} to SINGLE_USER. Error: {ex.Message}");
                     }
                 }
 
-                // 2. Drop the database.
                 string dropCmdText = $"DROP DATABASE [{databaseName}]";
                 using (var command = new SqlCommand(dropCmdText, connection))
                 {
-                    await command.ExecuteNonQueryAsync(); // This is the command that must succeed.
+                    await command.ExecuteNonQueryAsync();
                 }
             }
 
-            // After dropping, it's good practice to clear the connection pool associated with the
-            // now-deleted database to prevent the application from trying to use a cached connection.
             var dbConnectionStringBuilder = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = databaseName };
             using (var connToClear = new SqlConnection(dbConnectionStringBuilder.ConnectionString))
             {
@@ -302,16 +348,12 @@ namespace SqlServerTool
         public async Task<bool> AttachDatabaseAsync(string dbName, string mdfPath, string ldfPath)
         {
             string commandText;
-            // If the LDF path is provided and the file actually exists, we use it.
             if (!string.IsNullOrWhiteSpace(ldfPath) && File.Exists(ldfPath))
             {
                 commandText = $"CREATE DATABASE [{dbName}] ON (FILENAME = N'{mdfPath}'), (FILENAME = N'{ldfPath}') FOR ATTACH";
             }
             else
             {
-                // If the LDF path is missing, or the file doesn't exist at that path,
-                // instruct SQL Server to attach the MDF and build a new log file.
-                // This is the standard way to recover from a missing or corrupt log file.
                 commandText = $"CREATE DATABASE [{dbName}] ON (FILENAME = N'{mdfPath}') FOR ATTACH_REBUILD_LOG";
             }
 
@@ -333,7 +375,7 @@ namespace SqlServerTool
                 await connection.OpenAsync();
                 using (var command = new SqlCommand($"DBCC CHECKDB ('{databaseName}') WITH ALL_ERRORMSGS, NO_INFOMSGS", connection))
                 {
-                    command.CommandTimeout = 1800; // 30 minutes
+                    command.CommandTimeout = 1800;
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -462,7 +504,6 @@ namespace SqlServerTool
                 InitialCatalog = databaseName
             };
 
-            // Get User Access mode first, as it can be done on the master connection
             try
             {
                 details.UserAccessMode = await GetUserAccessModeAsync(databaseName);
@@ -480,7 +521,6 @@ namespace SqlServerTool
                 {
                     await connection.OpenAsync();
 
-                    // --- NEW: Query for server and database properties ---
                     string serverInfoQuery = @"
                         SELECT 
                             @@TRANCOUNT AS TranCount,
@@ -505,7 +545,6 @@ namespace SqlServerTool
                             }
                         }
                     }
-
 
                     string versionQuery = "SELECT TOP 1 CAST(Major AS VARCHAR) + '.' + CAST(Minor AS VARCHAR) + '.' + CAST(Build AS VARCHAR) AS Result FROM fmk.Version ORDER BY VersionID DESC;";
                     using (var versionCmd = new SqlCommand(versionQuery, connection))
@@ -573,7 +612,6 @@ namespace SqlServerTool
                 }
                 catch (SqlException)
                 {
-                    // Don't pollute console for routine checks, just return details as-is
                 }
             }
             return details;
@@ -582,7 +620,7 @@ namespace SqlServerTool
         public async Task<string> GetUserAccessModeAsync(string databaseName)
         {
             const string query = "SELECT DATABASEPROPERTYEX(@dbName, 'UserAccess')";
-            using (var connection = await GetOpenConnectionAsync()) // Uses master by default
+            using (var connection = await GetOpenConnectionAsync())
             using (var command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@dbName", databaseName);
@@ -713,7 +751,7 @@ namespace SqlServerTool
                     return (true, $"SUCCESS: No triggers found in Sepidar database '{databaseName}', as expected.");
                 }
             }
-            else // Dasht
+            else
             {
                 var allowedTriggers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
@@ -743,6 +781,29 @@ namespace SqlServerTool
                     return (true, $"SUCCESS: All {foundTriggers.Count} triggers found in Dasht database '{databaseName}' are standard system triggers.");
                 }
             }
+        }
+
+        public async Task<DataTable> ExecuteQueryAsync(string query, string databaseName)
+        {
+            var dt = new DataTable();
+            var builder = new SqlConnectionStringBuilder(_connectionString)
+            {
+                InitialCatalog = databaseName
+            };
+
+            using (var connection = new SqlConnection(builder.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.CommandTimeout = 300; // 5 minute timeout for queries
+                    using (var adapter = new SqlDataAdapter(command))
+                    {
+                        await Task.Run(() => adapter.Fill(dt));
+                    }
+                }
+            }
+            return dt;
         }
     }
 }

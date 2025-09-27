@@ -19,7 +19,6 @@
             this.components = new System.ComponentModel.Container();
             this._gbConnection = new System.Windows.Forms.GroupBox();
             this._btnAbout = new System.Windows.Forms.Button();
-            this._btnDisconnect = new System.Windows.Forms.Button();
             this._btnConnect = new System.Windows.Forms.Button();
             this._btnBrowseServers = new System.Windows.Forms.Button();
             this._rbWindowsAuth = new System.Windows.Forms.RadioButton();
@@ -30,7 +29,7 @@
             this._txtUser = new System.Windows.Forms.TextBox();
             this._lblPassword = new System.Windows.Forms.Label();
             this._txtPassword = new System.Windows.Forms.TextBox();
-            this._lblVersion = new System.Windows.Forms.Label();
+            this._btnDisconnect = new System.Windows.Forms.Button();
             this._lbDatabases = new System.Windows.Forms.ListBox();
             this._btnBackup = new System.Windows.Forms.Button();
             this._btnDelete = new System.Windows.Forms.Button();
@@ -38,6 +37,8 @@
             this._btnDetach = new System.Windows.Forms.Button();
             this._rtbLog = new System.Windows.Forms.RichTextBox();
             this._gbFilePaths = new System.Windows.Forms.GroupBox();
+            this._lblLdfDrive = new System.Windows.Forms.Label();
+            this._lblMdfDrive = new System.Windows.Forms.Label();
             this._btnOpenDir = new System.Windows.Forms.Button();
             this._txtLdfPath = new System.Windows.Forms.TextBox();
             this._lblLdf = new System.Windows.Forms.Label();
@@ -60,6 +61,9 @@
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._btnSchemaCheck = new System.Windows.Forms.Button();
             this._btnCheckTriggers = new System.Windows.Forms.Button();
+            this._btnOpenQuery = new System.Windows.Forms.Button();
+            this._btnSaveQuery = new System.Windows.Forms.Button();
+            this._btnExecuteQuery = new System.Windows.Forms.Button();
             this._btnBackupVerifyChecksum = new System.Windows.Forms.Button();
             this._lblDatabases = new System.Windows.Forms.Label();
             this._lblActivationCode = new System.Windows.Forms.Label();
@@ -74,18 +78,37 @@
             this._lblCollation = new System.Windows.Forms.Label();
             this._gbDbInfo = new System.Windows.Forms.GroupBox();
             this._gbServerInfo = new System.Windows.Forms.GroupBox();
+            this._tabControl = new System.Windows.Forms.TabControl();
+            this._tabDbManager = new System.Windows.Forms.TabPage();
+            this._tabQueryWorkbook = new System.Windows.Forms.TabPage();
+            this._splitContainer = new System.Windows.Forms.SplitContainer();
+            this._lblQueryDb = new System.Windows.Forms.Label();
+            this._cmbDatabasesQuery = new System.Windows.Forms.ComboBox();
+            this._txtQuery = new System.Windows.Forms.TextBox();
+            this._dgvResults = new System.Windows.Forms.DataGridView();
+            this._gbSystemInfo = new System.Windows.Forms.GroupBox();
+            this._txtSystemDetails = new System.Windows.Forms.TextBox();
+            this._lblSqlVersion = new System.Windows.Forms.Label();
             this._gbConnection.SuspendLayout();
             this._gbFilePaths.SuspendLayout();
             this._gbAttach.SuspendLayout();
             this._gbDbOperations.SuspendLayout();
             this._gbDbInfo.SuspendLayout();
             this._gbServerInfo.SuspendLayout();
+            this._tabControl.SuspendLayout();
+            this._tabDbManager.SuspendLayout();
+            this._tabQueryWorkbook.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._splitContainer)).BeginInit();
+            this._splitContainer.Panel1.SuspendLayout();
+            this._splitContainer.Panel2.SuspendLayout();
+            this._splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._dgvResults)).BeginInit();
+            this._gbSystemInfo.SuspendLayout();
             this.SuspendLayout();
             // 
             // _gbConnection
             // 
             this._gbConnection.Controls.Add(this._btnAbout);
-            this._gbConnection.Controls.Add(this._btnDisconnect);
             this._gbConnection.Controls.Add(this._btnConnect);
             this._gbConnection.Controls.Add(this._btnBrowseServers);
             this._gbConnection.Controls.Add(this._rbWindowsAuth);
@@ -96,6 +119,7 @@
             this._gbConnection.Controls.Add(this._txtUser);
             this._gbConnection.Controls.Add(this._lblPassword);
             this._gbConnection.Controls.Add(this._txtPassword);
+            this._gbConnection.Controls.Add(this._btnDisconnect);
             this._gbConnection.Location = new System.Drawing.Point(12, 12);
             this._gbConnection.Name = "_gbConnection";
             this._gbConnection.Size = new System.Drawing.Size(537, 154);
@@ -113,25 +137,16 @@
             this._btnAbout.UseVisualStyleBackColor = true;
             this._btnAbout.Click += new System.EventHandler(this._btnAbout_Click);
             // 
-            // _btnDisconnect
-            // 
-            this._btnDisconnect.Location = new System.Drawing.Point(433, 85);
-            this._btnDisconnect.Name = "_btnDisconnect";
-            this._btnDisconnect.Size = new System.Drawing.Size(91, 28);
-            this._btnDisconnect.TabIndex = 6;
-            this._btnDisconnect.Text = "Disconnect";
-            this._btnDisconnect.UseVisualStyleBackColor = true;
-            this._btnDisconnect.Click += new System.EventHandler(this._btnDisconnect_Click);
-            // 
             // _btnConnect
             // 
+            this._btnConnect.BackColor = System.Drawing.Color.PaleGreen;
             this._btnConnect.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._btnConnect.Location = new System.Drawing.Point(433, 22);
             this._btnConnect.Name = "_btnConnect";
             this._btnConnect.Size = new System.Drawing.Size(91, 59);
             this._btnConnect.TabIndex = 5;
             this._btnConnect.Text = "Connect";
-            this._btnConnect.UseVisualStyleBackColor = true;
+            this._btnConnect.UseVisualStyleBackColor = false;
             this._btnConnect.Click += new System.EventHandler(this._btnConnect_Click);
             // 
             // _btnBrowseServers
@@ -216,23 +231,24 @@
             this._txtPassword.TabIndex = 4;
             this._txtPassword.UseSystemPasswordChar = true;
             // 
-            // _lblVersion
+            // _btnDisconnect
             // 
-            this._lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this._lblVersion.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this._lblVersion.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this._lblVersion.Location = new System.Drawing.Point(555, 12);
-            this._lblVersion.Name = "_lblVersion";
-            this._lblVersion.Size = new System.Drawing.Size(357, 154);
-            this._lblVersion.TabIndex = 1;
-            this._lblVersion.Text = "Version: N/A";
+            this._btnDisconnect.BackColor = System.Drawing.Color.MistyRose;
+            this._btnDisconnect.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._btnDisconnect.Location = new System.Drawing.Point(433, 22);
+            this._btnDisconnect.Name = "_btnDisconnect";
+            this._btnDisconnect.Size = new System.Drawing.Size(91, 59);
+            this._btnDisconnect.TabIndex = 6;
+            this._btnDisconnect.Text = "Disconnect";
+            this._btnDisconnect.UseVisualStyleBackColor = false;
+            this._btnDisconnect.Visible = false;
+            this._btnDisconnect.Click += new System.EventHandler(this._btnDisconnect_Click);
             // 
             // _lbDatabases
             // 
             this._lbDatabases.FormattingEnabled = true;
             this._lbDatabases.ItemHeight = 15;
-            this._lbDatabases.Location = new System.Drawing.Point(12, 191);
+            this._lbDatabases.Location = new System.Drawing.Point(6, 24);
             this._lbDatabases.Name = "_lbDatabases";
             this._lbDatabases.Size = new System.Drawing.Size(280, 214);
             this._lbDatabases.TabIndex = 2;
@@ -240,6 +256,7 @@
             // 
             // _btnBackup
             // 
+            this._btnBackup.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this._btnBackup.Location = new System.Drawing.Point(6, 22);
             this._btnBackup.Name = "_btnBackup";
             this._btnBackup.Size = new System.Drawing.Size(128, 30);
@@ -284,34 +301,53 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
-            this._rtbLog.Location = new System.Drawing.Point(12, 712);
+            this._rtbLog.Location = new System.Drawing.Point(12, 755);
             this._rtbLog.Name = "_rtbLog";
             this._rtbLog.ReadOnly = true;
-            this._rtbLog.Size = new System.Drawing.Size(900, 85);
+            this._rtbLog.Size = new System.Drawing.Size(1040, 85);
             this._rtbLog.TabIndex = 8;
             this._rtbLog.Text = "";
             // 
             // _gbFilePaths
             // 
+            this._gbFilePaths.Controls.Add(this._lblLdfDrive);
+            this._gbFilePaths.Controls.Add(this._lblMdfDrive);
             this._gbFilePaths.Controls.Add(this._btnOpenDir);
             this._gbFilePaths.Controls.Add(this._txtLdfPath);
             this._gbFilePaths.Controls.Add(this._lblLdf);
             this._gbFilePaths.Controls.Add(this._txtMdfPath);
             this._gbFilePaths.Controls.Add(this._lblMdf);
-            this._gbFilePaths.Location = new System.Drawing.Point(298, 485);
+            this._gbFilePaths.Location = new System.Drawing.Point(292, 319);
             this._gbFilePaths.Name = "_gbFilePaths";
-            this._gbFilePaths.Size = new System.Drawing.Size(614, 90);
+            this._gbFilePaths.Size = new System.Drawing.Size(738, 90);
             this._gbFilePaths.TabIndex = 7;
             this._gbFilePaths.TabStop = false;
             this._gbFilePaths.Text = "Selected Database Files";
             // 
+            // _lblLdfDrive
+            // 
+            this._lblLdfDrive.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._lblLdfDrive.Location = new System.Drawing.Point(456, 55);
+            this._lblLdfDrive.Name = "_lblLdfDrive";
+            this._lblLdfDrive.Size = new System.Drawing.Size(160, 15);
+            this._lblLdfDrive.TabIndex = 4;
+            this._lblLdfDrive.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _lblMdfDrive
+            // 
+            this._lblMdfDrive.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._lblMdfDrive.Location = new System.Drawing.Point(456, 25);
+            this._lblMdfDrive.Name = "_lblMdfDrive";
+            this._lblMdfDrive.Size = new System.Drawing.Size(160, 15);
+            this._lblMdfDrive.TabIndex = 3;
+            this._lblMdfDrive.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // _btnOpenDir
             // 
-            this._btnOpenDir.Location = new System.Drawing.Point(498, 22);
+            this._btnOpenDir.Location = new System.Drawing.Point(622, 22);
             this._btnOpenDir.Name = "_btnOpenDir";
             this._btnOpenDir.Size = new System.Drawing.Size(110, 50);
             this._btnOpenDir.TabIndex = 2;
@@ -324,7 +360,7 @@
             this._txtLdfPath.Location = new System.Drawing.Point(90, 52);
             this._txtLdfPath.Name = "_txtLdfPath";
             this._txtLdfPath.ReadOnly = true;
-            this._txtLdfPath.Size = new System.Drawing.Size(402, 23);
+            this._txtLdfPath.Size = new System.Drawing.Size(360, 23);
             this._txtLdfPath.TabIndex = 1;
             // 
             // _lblLdf
@@ -341,7 +377,7 @@
             this._txtMdfPath.Location = new System.Drawing.Point(90, 22);
             this._txtMdfPath.Name = "_txtMdfPath";
             this._txtMdfPath.ReadOnly = true;
-            this._txtMdfPath.Size = new System.Drawing.Size(402, 23);
+            this._txtMdfPath.Size = new System.Drawing.Size(360, 23);
             this._txtMdfPath.TabIndex = 0;
             // 
             // _lblMdf
@@ -362,9 +398,9 @@
             this._gbAttach.Controls.Add(this._btnBrowseMdf);
             this._gbAttach.Controls.Add(this._txtAttachMdf);
             this._gbAttach.Controls.Add(this._lblAttachMdf);
-            this._gbAttach.Location = new System.Drawing.Point(12, 619);
+            this._gbAttach.Location = new System.Drawing.Point(6, 452);
             this._gbAttach.Name = "_gbAttach";
-            this._gbAttach.Size = new System.Drawing.Size(900, 66);
+            this._gbAttach.Size = new System.Drawing.Size(1024, 66);
             this._gbAttach.TabIndex = 6;
             this._gbAttach.TabStop = false;
             this._gbAttach.Text = "Attach Database";
@@ -372,7 +408,8 @@
             // _btnAttach
             // 
             this._btnAttach.BackColor = System.Drawing.Color.LightGreen;
-            this._btnAttach.Location = new System.Drawing.Point(784, 22);
+            this._btnAttach.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._btnAttach.Location = new System.Drawing.Point(900, 22);
             this._btnAttach.Name = "_btnAttach";
             this._btnAttach.Size = new System.Drawing.Size(110, 30);
             this._btnAttach.TabIndex = 4;
@@ -435,6 +472,7 @@
             // _btnRestore
             // 
             this._btnRestore.BackColor = System.Drawing.Color.MediumAquamarine;
+            this._btnRestore.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this._btnRestore.Location = new System.Drawing.Point(6, 130);
             this._btnRestore.Name = "_btnRestore";
             this._btnRestore.Size = new System.Drawing.Size(262, 30);
@@ -448,7 +486,7 @@
             this._lblDbVersion.AutoSize = true;
             this._lblDbVersion.Location = new System.Drawing.Point(15, 25);
             this._lblDbVersion.Name = "_lblDbVersion";
-            this._lblDbVersion.Size = new System.Drawing.Size(99, 15);
+            this._lblDbVersion.Size = new System.Drawing.Size(100, 15);
             this._lblDbVersion.TabIndex = 14;
             this._lblDbVersion.Text = "Data Version: N/A";
             // 
@@ -465,7 +503,7 @@
             // 
             this._lbFiscalYears.FormattingEnabled = true;
             this._lbFiscalYears.ItemHeight = 15;
-            this._lbFiscalYears.Location = new System.Drawing.Point(630, 191);
+            this._lbFiscalYears.Location = new System.Drawing.Point(748, 24);
             this._lbFiscalYears.Name = "_lbFiscalYears";
             this._lbFiscalYears.Size = new System.Drawing.Size(282, 289);
             this._lbFiscalYears.TabIndex = 5;
@@ -474,7 +512,7 @@
             // 
             this._lblFiscalYears.AutoSize = true;
             this._lblFiscalYears.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblFiscalYears.Location = new System.Drawing.Point(630, 173);
+            this._lblFiscalYears.Location = new System.Drawing.Point(748, 6);
             this._lblFiscalYears.Name = "_lblFiscalYears";
             this._lblFiscalYears.Size = new System.Drawing.Size(68, 15);
             this._lblFiscalYears.TabIndex = 17;
@@ -516,6 +554,44 @@
             this._btnCheckTriggers.UseVisualStyleBackColor = false;
             this._btnCheckTriggers.Click += new System.EventHandler(this._btnCheckTriggers_Click);
             // 
+            // _btnOpenQuery
+            // 
+            this._btnOpenQuery.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnOpenQuery.Location = new System.Drawing.Point(747, 3);
+            this._btnOpenQuery.Name = "_btnOpenQuery";
+            this._btnOpenQuery.Size = new System.Drawing.Size(80, 30);
+            this._btnOpenQuery.TabIndex = 3;
+            this._btnOpenQuery.Text = "Open";
+            this._toolTip.SetToolTip(this._btnOpenQuery, "Open a query from a .sql file");
+            this._btnOpenQuery.UseVisualStyleBackColor = true;
+            this._btnOpenQuery.Click += new System.EventHandler(this._btnOpenQuery_Click);
+            // 
+            // _btnSaveQuery
+            // 
+            this._btnSaveQuery.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnSaveQuery.Location = new System.Drawing.Point(833, 3);
+            this._btnSaveQuery.Name = "_btnSaveQuery";
+            this._btnSaveQuery.Size = new System.Drawing.Size(80, 30);
+            this._btnSaveQuery.TabIndex = 2;
+            this._btnSaveQuery.Text = "Save";
+            this._toolTip.SetToolTip(this._btnSaveQuery, "Save the current query to a .sql file");
+            this._btnSaveQuery.UseVisualStyleBackColor = true;
+            this._btnSaveQuery.Click += new System.EventHandler(this._btnSaveQuery_Click);
+            // 
+            // _btnExecuteQuery
+            // 
+            this._btnExecuteQuery.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnExecuteQuery.BackColor = System.Drawing.Color.LightGreen;
+            this._btnExecuteQuery.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this._btnExecuteQuery.Location = new System.Drawing.Point(919, 3);
+            this._btnExecuteQuery.Name = "_btnExecuteQuery";
+            this._btnExecuteQuery.Size = new System.Drawing.Size(104, 30);
+            this._btnExecuteQuery.TabIndex = 1;
+            this._btnExecuteQuery.Text = "Execute (F5)";
+            this._toolTip.SetToolTip(this._btnExecuteQuery, "Execute the query (F5)");
+            this._btnExecuteQuery.UseVisualStyleBackColor = false;
+            this._btnExecuteQuery.Click += new System.EventHandler(this._btnExecuteQuery_Click);
+            // 
             // _btnBackupVerifyChecksum
             // 
             this._btnBackupVerifyChecksum.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -531,7 +607,7 @@
             // 
             this._lblDatabases.AutoSize = true;
             this._lblDatabases.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this._lblDatabases.Location = new System.Drawing.Point(12, 173);
+            this._lblDatabases.Location = new System.Drawing.Point(6, 6);
             this._lblDatabases.Name = "_lblDatabases";
             this._lblDatabases.Size = new System.Drawing.Size(63, 15);
             this._lblDatabases.TabIndex = 19;
@@ -548,11 +624,11 @@
             // 
             // _progressBar
             // 
-            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this._progressBar.Location = new System.Drawing.Point(12, 691);
+            this._progressBar.Location = new System.Drawing.Point(12, 734);
             this._progressBar.Name = "_progressBar";
-            this._progressBar.Size = new System.Drawing.Size(900, 15);
+            this._progressBar.Size = new System.Drawing.Size(1040, 15);
             this._progressBar.TabIndex = 23;
             // 
             // _gbDbOperations
@@ -565,7 +641,7 @@
             this._gbDbOperations.Controls.Add(this._btnBackupVerifyChecksum);
             this._gbDbOperations.Controls.Add(this._btnCheckDb);
             this._gbDbOperations.Controls.Add(this._btnDetach);
-            this._gbDbOperations.Location = new System.Drawing.Point(12, 411);
+            this._gbDbOperations.Location = new System.Drawing.Point(6, 244);
             this._gbDbOperations.Name = "_gbDbOperations";
             this._gbDbOperations.Size = new System.Drawing.Size(280, 202);
             this._gbDbOperations.TabIndex = 3;
@@ -578,7 +654,7 @@
             this._lblUserAccessMode.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this._lblUserAccessMode.Location = new System.Drawing.Point(15, 105);
             this._lblUserAccessMode.Name = "_lblUserAccessMode";
-            this._lblUserAccessMode.Size = new System.Drawing.Size(108, 15);
+            this._lblUserAccessMode.Size = new System.Drawing.Size(107, 15);
             this._lblUserAccessMode.TabIndex = 25;
             this._lblUserAccessMode.Text = "Access Mode: N/A";
             // 
@@ -587,7 +663,7 @@
             this._lblServerName.AutoSize = true;
             this._lblServerName.Location = new System.Drawing.Point(15, 25);
             this._lblServerName.Name = "_lblServerName";
-            this._lblServerName.Size = new System.Drawing.Size(99, 15);
+            this._lblServerName.Size = new System.Drawing.Size(102, 15);
             this._lblServerName.TabIndex = 26;
             this._lblServerName.Text = "Server Name: N/A";
             // 
@@ -596,7 +672,7 @@
             this._lblServiceName.AutoSize = true;
             this._lblServiceName.Location = new System.Drawing.Point(15, 45);
             this._lblServiceName.Name = "_lblServiceName";
-            this._lblServiceName.Size = new System.Drawing.Size(103, 15);
+            this._lblServiceName.Size = new System.Drawing.Size(107, 15);
             this._lblServiceName.TabIndex = 27;
             this._lblServiceName.Text = "Service Name: N/A";
             // 
@@ -605,7 +681,7 @@
             this._lblConnections.AutoSize = true;
             this._lblConnections.Location = new System.Drawing.Point(15, 65);
             this._lblConnections.Name = "_lblConnections";
-            this._lblConnections.Size = new System.Drawing.Size(100, 15);
+            this._lblConnections.Size = new System.Drawing.Size(102, 15);
             this._lblConnections.TabIndex = 28;
             this._lblConnections.Text = "Connections: N/A";
             // 
@@ -614,7 +690,7 @@
             this._lblTranCount.AutoSize = true;
             this._lblTranCount.Location = new System.Drawing.Point(15, 85);
             this._lblTranCount.Name = "_lblTranCount";
-            this._lblTranCount.Size = new System.Drawing.Size(92, 15);
+            this._lblTranCount.Size = new System.Drawing.Size(93, 15);
             this._lblTranCount.TabIndex = 29;
             this._lblTranCount.Text = "Tran Count: N/A";
             // 
@@ -623,7 +699,7 @@
             this._lblLanguage.AutoSize = true;
             this._lblLanguage.Location = new System.Drawing.Point(15, 105);
             this._lblLanguage.Name = "_lblLanguage";
-            this._lblLanguage.Size = new System.Drawing.Size(84, 15);
+            this._lblLanguage.Size = new System.Drawing.Size(87, 15);
             this._lblLanguage.TabIndex = 30;
             this._lblLanguage.Text = "Language: N/A";
             // 
@@ -632,7 +708,7 @@
             this._lblCollation.AutoSize = true;
             this._lblCollation.Location = new System.Drawing.Point(15, 125);
             this._lblCollation.Name = "_lblCollation";
-            this._lblCollation.Size = new System.Drawing.Size(78, 15);
+            this._lblCollation.Size = new System.Drawing.Size(83, 15);
             this._lblCollation.TabIndex = 31;
             this._lblCollation.Text = "Collation: N/A";
             // 
@@ -643,9 +719,9 @@
             this._gbDbInfo.Controls.Add(this._lblDbType);
             this._gbDbInfo.Controls.Add(this._lblActivationCode);
             this._gbDbInfo.Controls.Add(this._lblUserAccessMode);
-            this._gbDbInfo.Location = new System.Drawing.Point(298, 173);
+            this._gbDbInfo.Location = new System.Drawing.Point(292, 6);
             this._gbDbInfo.Name = "_gbDbInfo";
-            this._gbDbInfo.Size = new System.Drawing.Size(326, 132);
+            this._gbDbInfo.Size = new System.Drawing.Size(450, 132);
             this._gbDbInfo.TabIndex = 4;
             this._gbDbInfo.TabStop = false;
             this._gbDbInfo.Text = "Database Details";
@@ -658,38 +734,180 @@
             this._gbServerInfo.Controls.Add(this._lblLanguage);
             this._gbServerInfo.Controls.Add(this._lblConnections);
             this._gbServerInfo.Controls.Add(this._lblTranCount);
-            this._gbServerInfo.Location = new System.Drawing.Point(298, 311);
+            this._gbServerInfo.Location = new System.Drawing.Point(292, 144);
             this._gbServerInfo.Name = "_gbServerInfo";
-            this._gbServerInfo.Size = new System.Drawing.Size(326, 168);
+            this._gbServerInfo.Size = new System.Drawing.Size(450, 168);
             this._gbServerInfo.TabIndex = 5;
             this._gbServerInfo.TabStop = false;
             this._gbServerInfo.Text = "Server && Connection Details";
+            // 
+            // _tabControl
+            // 
+            this._tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this._tabControl.Controls.Add(this._tabDbManager);
+            this._tabControl.Controls.Add(this._tabQueryWorkbook);
+            this._tabControl.Location = new System.Drawing.Point(12, 172);
+            this._tabControl.Name = "_tabControl";
+            this._tabControl.SelectedIndex = 0;
+            this._tabControl.Size = new System.Drawing.Size(1040, 556);
+            this._tabControl.TabIndex = 24;
+            // 
+            // _tabDbManager
+            // 
+            this._tabDbManager.Controls.Add(this._lblDatabases);
+            this._tabDbManager.Controls.Add(this._gbServerInfo);
+            this._tabDbManager.Controls.Add(this._lbDatabases);
+            this._tabDbManager.Controls.Add(this._gbDbInfo);
+            this._tabDbManager.Controls.Add(this._gbDbOperations);
+            this._tabDbManager.Controls.Add(this._gbAttach);
+            this._tabDbManager.Controls.Add(this._gbFilePaths);
+            this._tabDbManager.Controls.Add(this._lbFiscalYears);
+            this._tabDbManager.Controls.Add(this._lblFiscalYears);
+            this._tabDbManager.Location = new System.Drawing.Point(4, 24);
+            this._tabDbManager.Name = "_tabDbManager";
+            this._tabDbManager.Padding = new System.Windows.Forms.Padding(3);
+            this._tabDbManager.Size = new System.Drawing.Size(1032, 528);
+            this._tabDbManager.TabIndex = 0;
+            this._tabDbManager.Text = "Database Manager";
+            this._tabDbManager.UseVisualStyleBackColor = true;
+            // 
+            // _tabQueryWorkbook
+            // 
+            this._tabQueryWorkbook.Controls.Add(this._splitContainer);
+            this._tabQueryWorkbook.Location = new System.Drawing.Point(4, 24);
+            this._tabQueryWorkbook.Name = "_tabQueryWorkbook";
+            this._tabQueryWorkbook.Padding = new System.Windows.Forms.Padding(3);
+            this._tabQueryWorkbook.Size = new System.Drawing.Size(1032, 528);
+            this._tabQueryWorkbook.TabIndex = 1;
+            this._tabQueryWorkbook.Text = "Query Workbook";
+            this._tabQueryWorkbook.UseVisualStyleBackColor = true;
+            // 
+            // _splitContainer
+            // 
+            this._splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._splitContainer.Location = new System.Drawing.Point(3, 3);
+            this._splitContainer.Name = "_splitContainer";
+            this._splitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // _splitContainer.Panel1
+            // 
+            this._splitContainer.Panel1.Controls.Add(this._lblQueryDb);
+            this._splitContainer.Panel1.Controls.Add(this._cmbDatabasesQuery);
+            this._splitContainer.Panel1.Controls.Add(this._btnOpenQuery);
+            this._splitContainer.Panel1.Controls.Add(this._btnSaveQuery);
+            this._splitContainer.Panel1.Controls.Add(this._btnExecuteQuery);
+            this._splitContainer.Panel1.Controls.Add(this._txtQuery);
+            // 
+            // _splitContainer.Panel2
+            // 
+            this._splitContainer.Panel2.Controls.Add(this._dgvResults);
+            this._splitContainer.Size = new System.Drawing.Size(1026, 522);
+            this._splitContainer.SplitterDistance = 246;
+            this._splitContainer.TabIndex = 0;
+            // 
+            // _lblQueryDb
+            // 
+            this._lblQueryDb.AutoSize = true;
+            this._lblQueryDb.Location = new System.Drawing.Point(3, 10);
+            this._lblQueryDb.Name = "_lblQueryDb";
+            this._lblQueryDb.Size = new System.Drawing.Size(105, 15);
+            this._lblQueryDb.TabIndex = 5;
+            this._lblQueryDb.Text = "Run query against:";
+            // 
+            // _cmbDatabasesQuery
+            // 
+            this._cmbDatabasesQuery.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._cmbDatabasesQuery.FormattingEnabled = true;
+            this._cmbDatabasesQuery.Location = new System.Drawing.Point(119, 7);
+            this._cmbDatabasesQuery.Name = "_cmbDatabasesQuery";
+            this._cmbDatabasesQuery.Size = new System.Drawing.Size(273, 23);
+            this._cmbDatabasesQuery.TabIndex = 4;
+            // 
+            // _txtQuery
+            // 
+            this._txtQuery.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this._txtQuery.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._txtQuery.Location = new System.Drawing.Point(3, 39);
+            this._txtQuery.Multiline = true;
+            this._txtQuery.Name = "_txtQuery";
+            this._txtQuery.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this._txtQuery.Size = new System.Drawing.Size(1020, 204);
+            this._txtQuery.TabIndex = 0;
+            // 
+            // _dgvResults
+            // 
+            this._dgvResults.AllowUserToAddRows = false;
+            this._dgvResults.AllowUserToDeleteRows = false;
+            this._dgvResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this._dgvResults.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._dgvResults.Location = new System.Drawing.Point(0, 0);
+            this._dgvResults.Name = "_dgvResults";
+            this._dgvResults.ReadOnly = true;
+            this._dgvResults.Size = new System.Drawing.Size(1026, 272);
+            this._dgvResults.TabIndex = 0;
+            // 
+            // _gbSystemInfo
+            // 
+            this._gbSystemInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this._gbSystemInfo.Controls.Add(this._txtSystemDetails);
+            this._gbSystemInfo.Controls.Add(this._lblSqlVersion);
+            this._gbSystemInfo.Location = new System.Drawing.Point(555, 12);
+            this._gbSystemInfo.Name = "_gbSystemInfo";
+            this._gbSystemInfo.Size = new System.Drawing.Size(497, 154);
+            this._gbSystemInfo.TabIndex = 25;
+            this._gbSystemInfo.TabStop = false;
+            this._gbSystemInfo.Text = "System & Server Details";
+            // 
+            // _txtSystemDetails
+            // 
+            this._txtSystemDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this._txtSystemDetails.BackColor = System.Drawing.SystemColors.Control;
+            this._txtSystemDetails.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this._txtSystemDetails.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._txtSystemDetails.Location = new System.Drawing.Point(15, 55);
+            this._txtSystemDetails.Multiline = true;
+            this._txtSystemDetails.Name = "_txtSystemDetails";
+            this._txtSystemDetails.ReadOnly = true;
+            this._txtSystemDetails.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this._txtSystemDetails.Size = new System.Drawing.Size(476, 90);
+            this._txtSystemDetails.TabIndex = 1;
+            this._txtSystemDetails.Text = "Client Hardware: N/A";
+            // 
+            // _lblSqlVersion
+            // 
+            this._lblSqlVersion.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this._lblSqlVersion.Location = new System.Drawing.Point(15, 25);
+            this._lblSqlVersion.Name = "_lblSqlVersion";
+            this._lblSqlVersion.Size = new System.Drawing.Size(469, 30);
+            this._lblSqlVersion.TabIndex = 0;
+            this._lblSqlVersion.Text = "SQL Version: N/A";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(924, 809);
-            this.Controls.Add(this._gbServerInfo);
-            this.Controls.Add(this._gbDbInfo);
-            this.Controls.Add(this._gbDbOperations);
+            this.ClientSize = new System.Drawing.Size(1064, 852);
+            this.Controls.Add(this._gbSystemInfo);
+            this.Controls.Add(this._tabControl);
             this.Controls.Add(this._progressBar);
-            this.Controls.Add(this._lblDatabases);
-            this.Controls.Add(this._lblFiscalYears);
-            this.Controls.Add(this._lbFiscalYears);
-            this.Controls.Add(this._gbAttach);
-            this.Controls.Add(this._gbFilePaths);
             this.Controls.Add(this._rtbLog);
-            this.Controls.Add(this._lbDatabases);
-            this.Controls.Add(this._lblVersion);
             this.Controls.Add(this._gbConnection);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = global::SqlServerTool.Properties.Resources.AppIcon;
+            this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "SQL Server Utility";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this._gbConnection.ResumeLayout(false);
             this._gbConnection.PerformLayout();
             this._gbFilePaths.ResumeLayout(false);
@@ -701,8 +919,19 @@
             this._gbDbInfo.PerformLayout();
             this._gbServerInfo.ResumeLayout(false);
             this._gbServerInfo.PerformLayout();
+            this._tabControl.ResumeLayout(false);
+            this._tabDbManager.ResumeLayout(false);
+            this._tabDbManager.PerformLayout();
+            this._tabQueryWorkbook.ResumeLayout(false);
+            this._splitContainer.Panel1.ResumeLayout(false);
+            this._splitContainer.Panel1.PerformLayout();
+            this._splitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this._splitContainer)).EndInit();
+            this._splitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this._dgvResults)).EndInit();
+            this._gbSystemInfo.ResumeLayout(false);
+            this._gbSystemInfo.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -719,7 +948,6 @@
         private System.Windows.Forms.TextBox _txtPassword;
         private System.Windows.Forms.Button _btnConnect;
         private System.Windows.Forms.Button _btnDisconnect;
-        private System.Windows.Forms.Label _lblVersion;
         private System.Windows.Forms.ListBox _lbDatabases;
         private System.Windows.Forms.Button _btnBackup;
         private System.Windows.Forms.Button _btnDelete;
@@ -765,7 +993,21 @@
         private System.Windows.Forms.Label _lblCollation;
         private System.Windows.Forms.GroupBox _gbDbInfo;
         private System.Windows.Forms.GroupBox _gbServerInfo;
+        private System.Windows.Forms.TabControl _tabControl;
+        private System.Windows.Forms.TabPage _tabDbManager;
+        private System.Windows.Forms.TabPage _tabQueryWorkbook;
+        private System.Windows.Forms.SplitContainer _splitContainer;
+        private System.Windows.Forms.TextBox _txtQuery;
+        private System.Windows.Forms.DataGridView _dgvResults;
+        private System.Windows.Forms.Button _btnExecuteQuery;
+        private System.Windows.Forms.Button _btnSaveQuery;
+        private System.Windows.Forms.Button _btnOpenQuery;
+        private System.Windows.Forms.ComboBox _cmbDatabasesQuery;
+        private System.Windows.Forms.Label _lblQueryDb;
+        private System.Windows.Forms.GroupBox _gbSystemInfo;
+        private System.Windows.Forms.Label _lblSqlVersion;
+        private System.Windows.Forms.Label _lblLdfDrive;
+        private System.Windows.Forms.Label _lblMdfDrive;
+        private System.Windows.Forms.TextBox _txtSystemDetails;
     }
 }
-
-
