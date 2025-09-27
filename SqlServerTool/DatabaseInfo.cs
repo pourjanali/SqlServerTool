@@ -11,6 +11,7 @@ namespace SqlServerTool
         public string Name { get; set; } = "N/A";
         public string MdfPath { get; set; } = "N/A";
         public string LdfPath { get; set; } = "N/A";
+        public double SizeMb { get; set; }
 
         // #32: Updated properties to hold drive letter and full disk model name.
         public string MdfDrive => !string.IsNullOrEmpty(MdfPath) && Path.IsPathRooted(MdfPath) ? Path.GetPathRoot(MdfPath) : "";

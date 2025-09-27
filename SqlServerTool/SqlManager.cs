@@ -269,27 +269,50 @@ namespace SqlServerTool
 
         public async Task<List<DatabaseInfo>> GetDatabasesAndFilesAsync()
         {
-            var databases = new List<DatabaseInfo>();
-            const string query = "SELECT d.name, mf.physical_name FROM sys.databases d JOIN sys.master_files mf ON d.database_id = mf.database_id WHERE d.database_id > 4 ORDER BY d.name, mf.type_desc DESC;";
+            var databases = new Dictionary<string, DatabaseInfo>();
+            const string query = @"
+                SELECT
+                    d.name,
+                    mf.physical_name,
+                    mf.type_desc,
+                    CAST(mf.size AS BIGINT) * 8 AS FileSizeKb
+                FROM
+                    sys.databases d
+                JOIN
+                    sys.master_files mf ON d.database_id = mf.database_id
+                WHERE d.database_id > 4
+                ORDER BY d.name;";
 
             using (var connection = await GetOpenConnectionAsync())
             using (var command = new SqlCommand(query, connection))
             using (var reader = await command.ExecuteReaderAsync())
             {
-                DatabaseInfo currentDb = null;
                 while (await reader.ReadAsync())
                 {
                     string dbName = reader.GetString(0);
-                    if (currentDb == null || currentDb.Name != dbName)
+                    string filePath = reader.GetString(1);
+                    string fileType = reader.GetString(2);
+                    long fileSizeKb = reader.GetInt64(3);
+                    double fileSizeMb = fileSizeKb / 1024.0;
+
+                    if (!databases.TryGetValue(dbName, out var dbInfo))
                     {
-                        currentDb = new DatabaseInfo { Name = dbName };
-                        databases.Add(currentDb);
+                        dbInfo = new DatabaseInfo { Name = dbName };
+                        databases[dbName] = dbInfo;
                     }
-                    if (currentDb.MdfPath == "N/A") currentDb.MdfPath = reader.GetString(1);
-                    else currentDb.LdfPath = reader.GetString(1);
+
+                    if (fileType == "ROWS")
+                    {
+                        dbInfo.MdfPath = filePath;
+                    }
+                    else if (fileType == "LOG")
+                    {
+                        dbInfo.LdfPath = filePath;
+                    }
+                    dbInfo.SizeMb += fileSizeMb;
                 }
             }
-            return databases;
+            return databases.Values.OrderBy(db => db.Name).ToList();
         }
 
         public async Task<bool> BackupDatabaseAsync(string databaseName, string backupFilePath, bool verify, IProgress<int> progress = null)

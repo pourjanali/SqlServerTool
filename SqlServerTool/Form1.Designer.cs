@@ -77,6 +77,7 @@
             this._lblLanguage = new System.Windows.Forms.Label();
             this._lblCollation = new System.Windows.Forms.Label();
             this._gbDbInfo = new System.Windows.Forms.GroupBox();
+            this._lblDbSize = new System.Windows.Forms.Label();
             this._gbServerInfo = new System.Windows.Forms.GroupBox();
             this._tabControl = new System.Windows.Forms.TabControl();
             this._tabDbManager = new System.Windows.Forms.TabPage();
@@ -301,7 +302,7 @@
             // 
             // _rtbLog
             // 
-            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this._rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._rtbLog.BackColor = System.Drawing.Color.White;
             this._rtbLog.Location = new System.Drawing.Point(12, 755);
@@ -624,7 +625,7 @@
             // 
             // _progressBar
             // 
-            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this._progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._progressBar.Location = new System.Drawing.Point(12, 734);
             this._progressBar.Name = "_progressBar";
@@ -714,6 +715,7 @@
             // 
             // _gbDbInfo
             // 
+            this._gbDbInfo.Controls.Add(this._lblDbSize);
             this._gbDbInfo.Controls.Add(this._lblDbVersion);
             this._gbDbInfo.Controls.Add(this._lblCompanyName);
             this._gbDbInfo.Controls.Add(this._lblDbType);
@@ -725,6 +727,16 @@
             this._gbDbInfo.TabIndex = 4;
             this._gbDbInfo.TabStop = false;
             this._gbDbInfo.Text = "Database Details";
+            // 
+            // _lblDbSize
+            // 
+            this._lblDbSize.AutoSize = true;
+            this._lblDbSize.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this._lblDbSize.Location = new System.Drawing.Point(220, 65);
+            this._lblDbSize.Name = "_lblDbSize";
+            this._lblDbSize.Size = new System.Drawing.Size(62, 15);
+            this._lblDbSize.TabIndex = 26;
+            this._lblDbSize.Text = "Size: N/A";
             // 
             // _gbServerInfo
             // 
@@ -743,8 +755,8 @@
             // 
             // _tabControl
             // 
-            this._tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this._tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._tabControl.Controls.Add(this._tabDbManager);
             this._tabControl.Controls.Add(this._tabQueryWorkbook);
@@ -827,8 +839,8 @@
             // 
             // _txtQuery
             // 
-            this._txtQuery.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this._txtQuery.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._txtQuery.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this._txtQuery.Location = new System.Drawing.Point(3, 39);
@@ -852,7 +864,7 @@
             // 
             // _gbSystemInfo
             // 
-            this._gbSystemInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._gbSystemInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._gbSystemInfo.Controls.Add(this._txtSystemDetails);
             this._gbSystemInfo.Controls.Add(this._lblSqlVersion);
@@ -865,8 +877,8 @@
             // 
             // _txtSystemDetails
             // 
-            this._txtSystemDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this._txtSystemDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this._txtSystemDetails.BackColor = System.Drawing.SystemColors.Control;
             this._txtSystemDetails.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -1009,5 +1021,6 @@
         private System.Windows.Forms.Label _lblLdfDrive;
         private System.Windows.Forms.Label _lblMdfDrive;
         private System.Windows.Forms.TextBox _txtSystemDetails;
+        private System.Windows.Forms.Label _lblDbSize;
     }
 }

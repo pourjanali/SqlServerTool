@@ -236,6 +236,7 @@ namespace SqlServerTool
             _lblDbVersion.Text = "Data Version: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
+            _lblDbSize.Text = "Size: N/A";
             _lblActivationCode.Text = "Activation Code: N/A";
             _lblUserAccessMode.Text = "Access Mode: N/A";
             _lblUserAccessMode.ForeColor = SystemColors.ControlText;
@@ -400,6 +401,7 @@ namespace SqlServerTool
             _lblDbVersion.Text = "Data Version: N/A";
             _lblCompanyName.Text = "Company: N/A";
             _lblDbType.Text = "Type: N/A";
+            _lblDbSize.Text = "Size: N/A";
             _lblActivationCode.Text = "Activation Code: N/A";
             _lblUserAccessMode.Text = "Access Mode: N/A";
             _lblUserAccessMode.ForeColor = SystemColors.ControlText;
@@ -766,6 +768,7 @@ namespace SqlServerTool
                 _txtLdfPath.Text = dbInfo.LdfPath;
                 _lblMdfDrive.Text = $"[{dbInfo.MdfDriveModel}]";
                 _lblLdfDrive.Text = $"[{dbInfo.LdfDriveModel}]";
+                _lblDbSize.Text = $"Size: {dbInfo.SizeMb:N2} MB ({dbInfo.SizeMb / 1024.0:N2} GB)";
 
                 _lblDbVersion.Text = "Data Version: Loading...";
                 _lblCompanyName.Text = "Company: Loading...";
