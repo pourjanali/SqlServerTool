@@ -13,8 +13,7 @@ namespace SqlServerTool
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            // We now run the SplashScreen first, which will then launch Form1.
-            Application.Run(new SplashScreen());
+            Application.Run(new Form1());
         }
     }
 }
