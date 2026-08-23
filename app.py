@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QHeaderView
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
-from PyQt6.QtGui import QFont, QColor, QPalette, QCursor
+from PyQt6.QtGui import QFont, QColor, QPalette, QCursor, QIcon
 
 
 class DatabaseType(Enum):
@@ -1357,6 +1357,8 @@ class MainWindow(QMainWindow):
     def browse_file(self, line_edit: QLineEdit, filter_str: str):
         path, _ = QFileDialog.getOpenFileName(self, "Select File", "", filter_str)
         if path:
+            # Fix: Normalize forward slashes to backslashes for the UI
+            path = os.path.normpath(path)
             line_edit.setText(path)
             # Auto fill LDF if MDF is selected
             if "MDF" in filter_str.upper():
@@ -1367,6 +1369,11 @@ class MainWindow(QMainWindow):
     def perform_attach(self):
         mdf = self.txt_attach_mdf.text().strip()
         ldf = self.txt_attach_ldf.text().strip()
+        
+        # Fix: Normalize the final strings before passing to SQL Server
+        if mdf: mdf = os.path.normpath(mdf)
+        if ldf: ldf = os.path.normpath(ldf)
+        
         if not mdf:
             QMessageBox.warning(self, "Warning", "Please provide MDF path.")
             return
@@ -1488,6 +1495,16 @@ def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     
+    # Load Application Icons (Favicon, Taskbar, Window Header)
+    app_icon = QIcon()
+    icon_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+    if os.path.exists(icon_dir):
+        # Load all resolution variants from the icons folder
+        for file in os.listdir(icon_dir):
+            if file.lower().endswith(('.png', '.ico')):
+                app_icon.addFile(os.path.join(icon_dir, file))
+        app.setWindowIcon(app_icon)
+    
     # Modern styling defaults
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(240, 240, 240))
@@ -1495,6 +1512,7 @@ def main():
     app.setPalette(palette)
     
     window = MainWindow()
+    window.setWindowIcon(app_icon) # Apply explicitly to main window
     window.show()
     sys.exit(app.exec())
 
