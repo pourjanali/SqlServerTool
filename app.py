@@ -9,6 +9,8 @@ import pyodbc
 import pythoncom
 from datetime import datetime
 
+APP_VERSION = "2.0.0" # Updated version indicating the Python rewrite
+
 # PyQt6 imports for GUI
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -653,7 +655,7 @@ class Worker(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SQL Server Utility (Python Edition)")
+        self.setWindowTitle(f"SQL Server Utility v{APP_VERSION} (Python Edition)")
         self.resize(1100, 800)
         self.sql_manager = None
         self._databases: list[DatabaseInfo] = []
@@ -1497,7 +1499,15 @@ def main():
     
     # Load Application Icons (Favicon, Taskbar, Window Header)
     app_icon = QIcon()
-    icon_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+    
+    # PyInstaller creates a temp folder and stores path in _MEIPASS
+    if getattr(sys, 'frozen', False):
+        base_dir = sys._MEIPASS
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+    icon_dir = os.path.join(base_dir, "icons")
+    
     if os.path.exists(icon_dir):
         # Load all resolution variants from the icons folder
         for file in os.listdir(icon_dir):
