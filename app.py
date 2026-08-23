@@ -1274,6 +1274,9 @@ class MainWindow(QMainWindow):
             dest_folder = QFileDialog.getExistingDirectory(self, "Select a folder to save new MDF and LDF files.")
             if not dest_folder: return
             
+            # Normalize the path to convert forward slashes to native Windows backslashes
+            dest_folder = os.path.normpath(dest_folder)
+            
             new_mdf = os.path.join(dest_folder, f"{new_db_name.strip()}.mdf")
             new_ldf = os.path.join(dest_folder, f"{new_db_name.strip()}_log.ldf")
             
