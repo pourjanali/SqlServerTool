@@ -347,18 +347,22 @@ class SqlManager:
         return True
 
     def delete_database(self, db_name: str) -> bool:
-        # SINGLE_USER mode to drop connections
-        try:
-            with self._get_connection("master", autocommit=True) as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(f"ALTER DATABASE [{db_name}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE")
-        except Exception:
-            pass # Ignore if already dropped or inaccessible
-            
-        # Drop database
         with self._get_connection("master", autocommit=True) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(f"DROP DATABASE [{db_name}]")
+                try:
+                    # SINGLE_USER mode to forcefully drop other active connections
+                    cursor.execute(f"ALTER DATABASE [{db_name}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE")
+                except pyodbc.Error as e:
+                    # If setting SINGLE_USER fails (e.g., due to permissions), DROP DATABASE will hang indefinitely.
+                    # We must abort and alert the user.
+                    raise Exception(f"Could not gain exclusive access to delete '{db_name}'. You may lack permissions.\nDetails: {str(e)}")
+                    
+                # Drop database
+                try:
+                    cursor.execute(f"DROP DATABASE [{db_name}]")
+                except pyodbc.Error as e:
+                    raise Exception(f"Failed to drop database '{db_name}'.\nDetails: {str(e)}")
+                    
         return True
 
     def attach_database(self, db_name: str, mdf_path: str, ldf_path: str) -> bool:
